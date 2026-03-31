@@ -1,0 +1,7 @@
+-- AutoEdge seed gebeurt via TypeScript script:
+-- npm run seed
+--
+-- Waarom script i.p.v. pure SQL?
+-- 1) Zelfde dataset wordt gedeeld met de mock fallback in de app
+-- 2) Makkelijk uitbreidbaar voor grotere batches en varianten
+-- 3) Minder kans op drift tussen frontend demo-data en database seed

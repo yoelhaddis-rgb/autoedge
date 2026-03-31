@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 8 11 17;
+  --foreground: 236 240 248;
+  --card: 13 18 28;
+  --border: 46 57 77;
+  --muted: 134 146 173;
+  --accent: 89 164 255;
+  --success: 67 201 132;
+  --warning: 245 187 71;
+  --danger: 255 107 107;
+}
+
+* {
+  border-color: rgb(var(--border) / 0.4);
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  color: rgb(var(--foreground));
+  background:
+    radial-gradient(circle at 5% 0%, rgba(76, 135, 255, 0.16), transparent 30%),
+    radial-gradient(circle at 95% 5%, rgba(76, 228, 182, 0.1), transparent 25%),
+    rgb(var(--background));
+  font-family: var(--font-body), "Manrope", "Avenir Next", "Segoe UI", sans-serif;
+}
+
+.font-heading {
+  font-family: var(--font-heading), "Sora", "Eurostile", sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
