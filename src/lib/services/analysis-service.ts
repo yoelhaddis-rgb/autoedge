@@ -5,8 +5,10 @@ import { mapListingRow, mapValuationRow } from "@/lib/data/mappers";
 import {
   ComparableInventoryValuationEngine,
   type ComparableInput,
-  type ComputedValuation
+  type ComputedValuation,
+  type DealerCostOverrides
 } from "@/lib/services/valuation-engine";
+import { getDealerPreferences } from "@/lib/services/preferences";
 import { ensureDealerProfileExists } from "@/lib/services/dealer-profile";
 import type { FuelType, Listing, TransmissionType, Valuation } from "@/types/domain";
 
@@ -205,6 +207,13 @@ export async function analyzeVehicle(
     throw new Error("Supabase client is unavailable.");
   }
 
+  const preferences = await getDealerPreferences(dealerId);
+  const costOverrides: DealerCostOverrides = {
+    reconCostBase: preferences.reconCostBaseOverride ?? undefined,
+    dailyHoldingCost: preferences.dailyHoldingCostOverride ?? undefined,
+    riskBufferBase: preferences.riskBufferBaseOverride ?? undefined
+  };
+
   const input: AnalyzeVehicleInput = {
     ...rawInput,
     brand: normalizeText(rawInput.brand),
@@ -274,7 +283,7 @@ export async function analyzeVehicle(
   // through this same analysis pipeline instead of direct manual form input.
   const comparableInputs = await buildComparableInputs(listing);
   const valuationEngine = new ComparableInventoryValuationEngine();
-  const computed = await valuationEngine.estimate(listing, comparableInputs);
+  const computed = await valuationEngine.estimate(listing, comparableInputs, costOverrides);
 
   const valuationRow = {
     listing_id: listing.id,
@@ -286,7 +295,8 @@ export async function analyzeVehicle(
     confidence_score: computed.confidenceScore,
     deal_score: computed.dealScore,
     reasons: computed.reasons,
-    risks: computed.risks
+    risks: computed.risks,
+    valuation_source: computed.valuationSource
   };
 
   const valuationWriteResult = await asUpsertTable(supabase.from("valuations")).upsert(valuationRow, {

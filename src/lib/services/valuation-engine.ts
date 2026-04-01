@@ -12,6 +12,15 @@ export type ComparableInput = {
   similarityScore: number;
 };
 
+export type DealerCostOverrides = {
+  /** Base reconditioning cost in EUR (engine default: 620). */
+  reconCostBase?: number;
+  /** Base daily holding cost in EUR (engine default: 12/day + 0.06% of price). */
+  dailyHoldingCost?: number;
+  /** Base risk buffer in EUR (engine default: 220). */
+  riskBufferBase?: number;
+};
+
 export type ValuationCostBreakdownInput = {
   listing: Listing;
   estimatedResaleValue: number;
@@ -21,6 +30,7 @@ export type ValuationCostBreakdownInput = {
   strictMatchCount: number;
   averageSimilarityScore?: number;
   targetExpectedCosts?: number;
+  costOverrides?: DealerCostOverrides;
 };
 
 export type ValuationCostBreakdown = {
@@ -60,7 +70,7 @@ export type ComputedValuation = {
 };
 
 export type ValuationEngine = {
-  estimate(listing: Listing, candidates: ComparableInput[]): Promise<ComputedValuation>;
+  estimate(listing: Listing, candidates: ComparableInput[], overrides?: DealerCostOverrides): Promise<ComputedValuation>;
 };
 
 type CostBuckets = {
@@ -86,7 +96,7 @@ function percentile(values: number[], targetPercentile: number): number {
   return Math.round(values[lower] + (values[upper] - values[lower]) * ratio);
 }
 
-function estimateReconCosts(listing: Listing): number {
+function estimateReconCosts(listing: Listing, overrides?: DealerCostOverrides): number {
   const currentYear = new Date().getFullYear();
   const ageYears = Math.max(0, currentYear - listing.year);
   const mileageOver = Math.max(0, listing.mileage - 80000);
@@ -97,7 +107,8 @@ function estimateReconCosts(listing: Listing): number {
   const transmissionAdjustment = listing.transmission === "Automatic" ? 100 : 70;
   const powerAdjustment = listing.powerHp >= 220 ? 160 : listing.powerHp >= 160 ? 90 : 0;
 
-  const raw = 620 + ageYears * 95 + mileageFactor * 145 + fuelAdjustment + transmissionAdjustment + powerAdjustment;
+  const base = overrides?.reconCostBase ?? 620;
+  const raw = base + ageYears * 95 + mileageFactor * 145 + fuelAdjustment + transmissionAdjustment + powerAdjustment;
   return clamp(Math.round(raw), 480, 7200);
 }
 
@@ -145,8 +156,9 @@ function estimateProjectedDaysToSell(input: {
   return clamp(Math.round(projectedDays), 10, 65);
 }
 
-function estimateHoldingCost(listing: Listing, projectedDaysToSell: number): number {
-  const dailyCost = clamp(Math.round(12 + listing.askingPrice * 0.0006), 12, 42);
+function estimateHoldingCost(listing: Listing, projectedDaysToSell: number, overrides?: DealerCostOverrides): number {
+  const dailyBase = overrides?.dailyHoldingCost ?? 12;
+  const dailyCost = clamp(Math.round(dailyBase + listing.askingPrice * 0.0006), dailyBase, Math.max(dailyBase, 42));
   return clamp(Math.round(projectedDaysToSell * dailyCost), 180, 3600);
 }
 
@@ -156,12 +168,13 @@ function estimateRiskBuffer(input: {
   strictMatchCount: number;
   spreadRatio: number;
   projectedDaysToSell: number;
+  overrides?: DealerCostOverrides;
 }): number {
-  const { listing, comparableCount, strictMatchCount, spreadRatio, projectedDaysToSell } = input;
+  const { listing, comparableCount, strictMatchCount, spreadRatio, projectedDaysToSell, overrides } = input;
   const currentYear = new Date().getFullYear();
   const ageYears = Math.max(0, currentYear - listing.year);
 
-  let riskBuffer = 220;
+  let riskBuffer = overrides?.riskBufferBase ?? 220;
 
   if (comparableCount < 4) riskBuffer += (4 - comparableCount) * 150;
   if (strictMatchCount < 2) riskBuffer += (2 - strictMatchCount) * 110;
@@ -346,14 +359,15 @@ export function buildValuationCostBreakdown(input: ValuationCostBreakdownInput):
   });
 
   const rawBuckets: CostBuckets = {
-    reconCosts: estimateReconCosts(input.listing),
-    holdingCost: estimateHoldingCost(input.listing, projectedDaysToSell),
+    reconCosts: estimateReconCosts(input.listing, input.costOverrides),
+    holdingCost: estimateHoldingCost(input.listing, projectedDaysToSell, input.costOverrides),
     riskBuffer: estimateRiskBuffer({
       listing: input.listing,
       comparableCount: input.comparableCount,
       strictMatchCount: input.strictMatchCount,
       spreadRatio,
-      projectedDaysToSell
+      projectedDaysToSell,
+      overrides: input.costOverrides
     })
   };
 
@@ -381,7 +395,7 @@ export function buildValuationCostBreakdown(input: ValuationCostBreakdownInput):
 }
 
 export class ComparableInventoryValuationEngine implements ValuationEngine {
-  async estimate(listing: Listing, candidates: ComparableInput[]): Promise<ComputedValuation> {
+  async estimate(listing: Listing, candidates: ComparableInput[], overrides?: DealerCostOverrides): Promise<ComputedValuation> {
     const selectedComparables = [...candidates]
       .sort((a, b) => a.similarityScore - b.similarityScore)
       .slice(0, 8);
@@ -429,7 +443,8 @@ export class ComparableInventoryValuationEngine implements ValuationEngine {
       highEstimate,
       comparableCount,
       strictMatchCount,
-      averageSimilarityScore
+      averageSimilarityScore,
+      costOverrides: overrides
     });
 
     const confidenceScore = buildConfidenceScore({
@@ -494,7 +509,8 @@ export class SeedValuationEngine {
       dealScore: 0,
       reasons: ["resale estimate is model-based (heuristic) — no comparable listings found in the database"],
       risks: ["no comparable listings found — estimate is heuristic-only; verify against live market prices before deciding"],
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      valuationSource: "model_based" as const
     };
   }
 }

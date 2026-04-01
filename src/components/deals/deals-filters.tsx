@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Search, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,14 +16,25 @@ type DealsFiltersProps = {
   transmissions: string[];
   statuses: string[];
   current: Record<string, string | undefined>;
+  preferencesActive?: boolean;
 };
 
 function toOptions(values: string[]): Option[] {
   return values.map((value) => ({ label: value, value }));
 }
 
-export function DealsFilters({ sources, fuels, transmissions, statuses, current }: DealsFiltersProps) {
+export function DealsFilters({ sources, fuels, transmissions, statuses, current, preferencesActive }: DealsFiltersProps) {
   return (
+    <div className="space-y-2">
+      {preferencesActive && (
+        <div className="flex items-center gap-2 text-sm text-blue-400">
+          <Settings2 className="h-3.5 w-3.5 shrink-0" />
+          <span>Gefilterd op jouw voorkeuren</span>
+          <Link href="/deals" className="ml-auto text-foreground/50 hover:text-foreground">
+            Reset
+          </Link>
+        </div>
+      )}
     <Card>
       <form className="grid gap-3 lg:grid-cols-9">
         <div className="relative lg:col-span-2">
@@ -99,5 +110,6 @@ export function DealsFilters({ sources, fuels, transmissions, statuses, current 
         </div>
       </form>
     </Card>
+    </div>
   );
 }

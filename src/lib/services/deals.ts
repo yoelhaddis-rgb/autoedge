@@ -23,6 +23,7 @@ import type {
   DealLifecycleStatus,
   DealOverview,
   DealStatus,
+  DealStatusHistoryEntry,
   Listing,
   Valuation
 } from "@/types/domain";
@@ -43,6 +44,10 @@ export type DealFilters = {
   status?: DealLifecycleStatus | "all";
   sort?: DealSort;
   minProfit?: number;
+  // Preference-derived filters — applied as soft defaults when no URL param overrides them.
+  minYear?: number;
+  maxMileage?: number;
+  brands?: string[];
 };
 
 export type DashboardSummary = {
@@ -190,6 +195,19 @@ function applyFilters(deals: DealOverview[], filters: DealFilters = {}): DealOve
     result = result.filter((deal) => deal.status === filters.status);
   }
 
+  if (typeof filters.minYear === "number") {
+    result = result.filter((deal) => deal.listing.year >= (filters.minYear as number));
+  }
+
+  if (typeof filters.maxMileage === "number") {
+    result = result.filter((deal) => deal.listing.mileage <= (filters.maxMileage as number));
+  }
+
+  if (filters.brands && filters.brands.length > 0) {
+    const brandSet = new Set(filters.brands.map((b) => b.toLowerCase()));
+    result = result.filter((deal) => brandSet.has(deal.listing.brand.toLowerCase()));
+  }
+
   switch (filters.sort) {
     case "profit_desc":
       result.sort((a, b) => b.valuation.expectedProfit - a.valuation.expectedProfit);
@@ -297,6 +315,37 @@ export async function getDealStatuses(dealerId: string = DEMO_DEALER_ID): Promis
   return data.map(mapDealStatusRow);
 }
 
+export async function getDealStatusHistory(
+  listingId: string,
+  dealerId: string = DEMO_DEALER_ID
+): Promise<DealStatusHistoryEntry[]> {
+  const supabase = await createServerClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("deal_status_history")
+    .select("*")
+    .eq("listing_id", listingId)
+    .eq("dealer_id", dealerId)
+    .order("changed_at", { ascending: false })
+    .limit(10);
+
+  if (error) {
+    console.error("AutoEdge: failed to load deal status history", { listingId, error: error.message });
+    return [];
+  }
+
+  return data.map((row) => ({
+    id: row.id,
+    dealerId: row.dealer_id,
+    listingId: row.listing_id,
+    oldStatus: (row.old_status as DealLifecycleStatus) ?? null,
+    newStatus: row.new_status as DealLifecycleStatus,
+    note: row.note,
+    changedAt: row.changed_at
+  }));
+}
+
 export async function upsertDealStatus(payload: {
   dealerId: string;
   listingId: string;
@@ -314,6 +363,16 @@ export async function upsertDealStatus(payload: {
 
   await ensureDealerProfileExists(supabase, dealerId);
 
+  // Fetch the current status before upserting (for history).
+  const { data: existing } = await supabase
+    .from("deal_statuses")
+    .select("status")
+    .eq("dealer_id", dealerId)
+    .eq("listing_id", listingId)
+    .maybeSingle();
+
+  const oldStatus = existing?.status ?? null;
+
   const statusWriteResult = await asUpsertTable(supabase.from("deal_statuses")).upsert(
     {
       dealer_id: dealerId,
@@ -330,4 +389,20 @@ export async function upsertDealStatus(payload: {
   if (statusWriteResult.error) {
     throw new Error(statusWriteResult.error.message);
   }
+
+  // Record history entry (fire-and-forget — a history write failure must not block the main action).
+  supabase
+    .from("deal_status_history")
+    .insert({
+      dealer_id: dealerId,
+      listing_id: listingId,
+      old_status: oldStatus,
+      new_status: status,
+      note: normalizedNote
+    })
+    .then(({ error: histError }) => {
+      if (histError) {
+        console.error("AutoEdge: failed to write deal status history", { listingId, error: histError.message });
+      }
+    });
 }

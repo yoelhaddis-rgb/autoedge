@@ -23,59 +23,310 @@ export type VehicleSuggestionResult =
     };
 
 const VEHICLE_CATALOG: VehicleCatalogEntry[] = [
+  // Alfa Romeo
+  { brand: "Alfa Romeo", model: "Giulia", aliases: ["alfa giulia"] },
+  { brand: "Alfa Romeo", model: "Stelvio", aliases: ["alfa stelvio"] },
+  { brand: "Alfa Romeo", model: "Tonale" },
+
+  // Audi
+  { brand: "Audi", model: "A1 Sportback", aliases: ["a1"] },
   { brand: "Audi", model: "A3 Sportback", aliases: ["a3"] },
   { brand: "Audi", model: "A4 Avant", aliases: ["a4"] },
+  { brand: "Audi", model: "A6 Avant", aliases: ["a6"] },
   { brand: "Audi", model: "Q2" },
-  { brand: "BMW", model: "1 Series", aliases: ["1serie", "1er"] },
-  { brand: "BMW", model: "320d Touring", aliases: ["320d", "320 d", "320diesel"] },
-  { brand: "BMW", model: "5 Series Touring", aliases: ["5serie touring", "520d touring"] },
+  { brand: "Audi", model: "Q3", aliases: ["q3 sportback"] },
+  { brand: "Audi", model: "Q5", aliases: ["q5 sportback"] },
+  { brand: "Audi", model: "e-tron", aliases: ["etron", "e tron", "q8 etron"] },
+
+  // BMW
+  { brand: "BMW", model: "1 Series", aliases: ["1serie", "1er", "118i", "116i", "120i"] },
+  { brand: "BMW", model: "3 Series", aliases: ["3serie", "320i", "320d", "330i", "330e"] },
+  { brand: "BMW", model: "320d Touring", aliases: ["320d touring", "320diesel touring"] },
+  { brand: "BMW", model: "5 Series Touring", aliases: ["5serie touring", "520d touring", "530i touring"] },
+  { brand: "BMW", model: "X1", aliases: ["x1 sdrive", "x1 xdrive"] },
+  { brand: "BMW", model: "X3", aliases: ["x3 xdrive", "x3 sdrive"] },
+  { brand: "BMW", model: "X5", aliases: ["x5 xdrive"] },
+  { brand: "BMW", model: "i3", aliases: ["bmw i3"] },
+  { brand: "BMW", model: "iX3", aliases: ["ix3"] },
+
+  // Citroën
+  { brand: "Citroën", model: "C3", aliases: ["c3 aircross"] },
+  { brand: "Citroën", model: "C4", aliases: ["c4 x"] },
+  { brand: "Citroën", model: "C5 Aircross" },
+  { brand: "Citroën", model: "Berlingo", aliases: ["berlingo multispace"] },
+
+  // Cupra
+  { brand: "Cupra", model: "Formentor" },
+  { brand: "Cupra", model: "Born", aliases: ["cupra born"] },
+  { brand: "Cupra", model: "Ateca", aliases: ["cupra ateca"] },
+
+  // Dacia
+  { brand: "Dacia", model: "Sandero", aliases: ["sandero stepway"] },
+  { brand: "Dacia", model: "Duster" },
+  { brand: "Dacia", model: "Logan", aliases: ["logan mcv"] },
+  { brand: "Dacia", model: "Jogger" },
+
+  // Fiat
   { brand: "Fiat", model: "500", aliases: ["fiat500"] },
+  { brand: "Fiat", model: "500X" },
   { brand: "Fiat", model: "Panda", aliases: ["pandina"] },
-  { brand: "Fiat", model: "Punto", aliases: ["grandepunto", "grande punto"] },
+  { brand: "Fiat", model: "Tipo", aliases: ["tipo stationwagon", "tipo sw"] },
+
+  // Ford
   { brand: "Ford", model: "Fiesta" },
   { brand: "Ford", model: "Focus Wagon", aliases: ["focus"] },
-  { brand: "Hyundai", model: "i30 Wagon", aliases: ["i30"] },
-  { brand: "Kia", model: "Ceed Sportswagon", aliases: ["ceed"] },
+  { brand: "Ford", model: "Puma", aliases: ["ford puma"] },
+  { brand: "Ford", model: "Kuga", aliases: ["kuga titanium"] },
+  { brand: "Ford", model: "Mustang Mach-E", aliases: ["mach e", "mache", "mustang mache"] },
+
+  // Honda
+  { brand: "Honda", model: "Civic", aliases: ["civic hatchback"] },
+  { brand: "Honda", model: "CR-V", aliases: ["crv", "cr v"] },
+  { brand: "Honda", model: "Jazz", aliases: ["jazz crosstar"] },
+  { brand: "Honda", model: "HR-V", aliases: ["hrv", "hr v"] },
+
+  // Hyundai
+  { brand: "Hyundai", model: "i20", aliases: ["i20 n"] },
+  { brand: "Hyundai", model: "i30 Wagon", aliases: ["i30", "i30 cw"] },
+  { brand: "Hyundai", model: "Tucson", aliases: ["tucson hybrid"] },
+  { brand: "Hyundai", model: "IONIQ 5", aliases: ["ioniq5", "ioniq 5"] },
+
+  // Jeep
+  { brand: "Jeep", model: "Renegade", aliases: ["renegade 4xe"] },
+  { brand: "Jeep", model: "Compass", aliases: ["compass 4xe"] },
+
+  // Kia
+  { brand: "Kia", model: "Ceed Sportswagon", aliases: ["ceed", "xceed"] },
+  { brand: "Kia", model: "Sportage", aliases: ["sportage hybrid"] },
+  { brand: "Kia", model: "Niro", aliases: ["niro hybrid", "niro ev", "niro phev"] },
+  { brand: "Kia", model: "EV6", aliases: ["ev6 gt"] },
+
+  // Land Rover
+  { brand: "Land Rover", model: "Discovery Sport", aliases: ["disco sport"] },
+  { brand: "Land Rover", model: "Range Rover Evoque", aliases: ["evoque", "rr evoque"] },
+  { brand: "Land Rover", model: "Range Rover Sport", aliases: ["rr sport"] },
+  { brand: "Land Rover", model: "Defender", aliases: ["defender 90", "defender 110"] },
+
+  // Mazda
   { brand: "Mazda", model: "3 Hatchback", aliases: ["mazda 3", "3"] },
-  { brand: "Mercedes", model: "A-Class", aliases: ["a class", "a klasse", "aklasse"] },
-  { brand: "Mercedes", model: "C-Class Estate", aliases: ["c class", "c klasse", "cklasse"] },
+  { brand: "Mazda", model: "CX-30", aliases: ["cx30", "cx 30"] },
+  { brand: "Mazda", model: "CX-5", aliases: ["cx5", "cx 5"] },
+  { brand: "Mazda", model: "6 Wagon", aliases: ["mazda 6", "6"] },
+
+  // Mercedes
+  { brand: "Mercedes", model: "A-Class", aliases: ["a class", "a klasse", "aklasse", "a180", "a200"] },
+  { brand: "Mercedes", model: "C-Class Estate", aliases: ["c class", "c klasse", "cklasse", "c200", "c220"] },
+  { brand: "Mercedes", model: "E-Class Estate", aliases: ["e class", "e klasse", "eklasse", "e200", "e220"] },
+  { brand: "Mercedes", model: "GLC", aliases: ["glc 200", "glc 300"] },
   { brand: "Mercedes", model: "CLA Shooting Brake", aliases: ["cla shootingbrake"] },
+  { brand: "Mercedes", model: "EQA", aliases: ["eqa 250"] },
+
+  // MG
+  { brand: "MG", model: "ZS", aliases: ["mg zs", "zs ev"] },
+  { brand: "MG", model: "MG4", aliases: ["mg 4"] },
+  { brand: "MG", model: "MG5", aliases: ["mg 5"] },
+
+  // Mini
+  { brand: "Mini", model: "Cooper", aliases: ["mini cooper", "cooper s", "one"] },
+  { brand: "Mini", model: "Countryman", aliases: ["mini countryman"] },
+  { brand: "Mini", model: "Clubman", aliases: ["mini clubman"] },
+
+  // Mitsubishi
+  { brand: "Mitsubishi", model: "Outlander", aliases: ["outlander phev"] },
+  { brand: "Mitsubishi", model: "Eclipse Cross", aliases: ["eclipse cross phev"] },
+  { brand: "Mitsubishi", model: "ASX" },
+
+  // Nissan
   { brand: "Nissan", model: "Qashqai", aliases: ["qasqai", "qashkai", "qashqay"] },
+  { brand: "Nissan", model: "Leaf", aliases: ["nissan leaf"] },
+  { brand: "Nissan", model: "Juke", aliases: ["juke hybrid"] },
+  { brand: "Nissan", model: "Ariya", aliases: ["nissan ariya"] },
+
+  // Opel
+  { brand: "Opel", model: "Corsa", aliases: ["corsa e", "corsa electric"] },
   { brand: "Opel", model: "Astra Sports Tourer", aliases: ["astra sportstourer", "astra wagon", "astra"] },
-  { brand: "Peugeot", model: "208" },
-  { brand: "Renault", model: "Clio" },
+  { brand: "Opel", model: "Crossland", aliases: ["crossland x"] },
+  { brand: "Opel", model: "Mokka", aliases: ["mokka e", "mokka electric"] },
+
+  // Peugeot
+  { brand: "Peugeot", model: "208", aliases: ["e-208", "e208"] },
+  { brand: "Peugeot", model: "2008", aliases: ["e-2008", "e2008"] },
+  { brand: "Peugeot", model: "308", aliases: ["308 sw"] },
+  { brand: "Peugeot", model: "3008", aliases: ["3008 hybrid"] },
+
+  // Porsche
+  { brand: "Porsche", model: "Cayenne", aliases: ["cayenne e-hybrid", "cayenne s"] },
+  { brand: "Porsche", model: "Macan", aliases: ["macan s", "macan electric"] },
+  { brand: "Porsche", model: "Panamera", aliases: ["panamera sport turismo"] },
+
+  // Renault
+  { brand: "Renault", model: "Clio", aliases: ["clio hybrid"] },
+  { brand: "Renault", model: "Mégane", aliases: ["megane", "megane e-tech", "megane ev"] },
+  { brand: "Renault", model: "Captur", aliases: ["captur hybrid"] },
+  { brand: "Renault", model: "Arkana", aliases: ["arkana hybrid"] },
+  { brand: "Renault", model: "Zoe", aliases: ["zoë", "zoe ev"] },
+
+  // Seat
+  { brand: "Seat", model: "Ibiza", aliases: ["seat ibiza"] },
+  { brand: "Seat", model: "Leon", aliases: ["seat leon", "leon sportstourer", "leon st"] },
+  { brand: "Seat", model: "Ateca", aliases: ["seat ateca"] },
+  { brand: "Seat", model: "Arona", aliases: ["seat arona"] },
+
+  // Skoda
   { brand: "Skoda", model: "Octavia Combi", aliases: ["octavia", "octavia wagon"] },
+  { brand: "Skoda", model: "Superb Combi", aliases: ["superb"] },
+  { brand: "Skoda", model: "Karoq" },
+  { brand: "Skoda", model: "Kodiaq" },
+
+  // Suzuki
+  { brand: "Suzuki", model: "Vitara", aliases: ["vitara hybrid"] },
+  { brand: "Suzuki", model: "Swift", aliases: ["swift sport"] },
+  { brand: "Suzuki", model: "S-Cross", aliases: ["scross", "s cross hybrid"] },
+
+  // Tesla
   { brand: "Tesla", model: "Model 3", aliases: ["model3"] },
+  { brand: "Tesla", model: "Model Y", aliases: ["modely"] },
+  { brand: "Tesla", model: "Model S", aliases: ["models"] },
+
+  // Toyota
+  { brand: "Toyota", model: "Yaris", aliases: ["yaris hybrid", "yaris gr"] },
+  { brand: "Toyota", model: "Yaris Cross", aliases: ["yariscross"] },
   { brand: "Toyota", model: "Corolla Touring Sports", aliases: ["corolla touring", "corolla"] },
-  { brand: "Toyota", model: "Yaris" },
-  { brand: "Volkswagen", model: "Golf", aliases: ["golf7", "golf 7", "golf vii"] },
-  { brand: "Volkswagen", model: "Passat Variant", aliases: ["passat"] },
+  { brand: "Toyota", model: "C-HR", aliases: ["chr", "c hr"] },
+  { brand: "Toyota", model: "RAV4", aliases: ["rav 4", "rav4 hybrid", "rav4 phev"] },
+  { brand: "Toyota", model: "Prius", aliases: ["prius plug-in", "prius phev"] },
+
+  // Volkswagen
   { brand: "Volkswagen", model: "Polo" },
-  { brand: "Volvo", model: "V60" }
+  { brand: "Volkswagen", model: "Golf", aliases: ["golf7", "golf 7", "golf vii", "golf 8", "golf viii"] },
+  { brand: "Volkswagen", model: "Golf Variant", aliases: ["golf variant", "golf wagon"] },
+  { brand: "Volkswagen", model: "Passat Variant", aliases: ["passat", "passat alltrack"] },
+  { brand: "Volkswagen", model: "T-Roc", aliases: ["troc", "t roc"] },
+  { brand: "Volkswagen", model: "Tiguan", aliases: ["tiguan allspace"] },
+  { brand: "Volkswagen", model: "ID.3", aliases: ["id3", "id 3"] },
+  { brand: "Volkswagen", model: "ID.4", aliases: ["id4", "id 4"] },
+  { brand: "Volkswagen", model: "T-Cross", aliases: ["tcross", "t cross"] },
+
+  // Volvo
+  { brand: "Volvo", model: "V60", aliases: ["v60 cross country"] },
+  { brand: "Volvo", model: "V90 Cross Country", aliases: ["v90", "v90cc"] },
+  { brand: "Volvo", model: "XC40", aliases: ["xc40 recharge"] },
+  { brand: "Volvo", model: "XC60", aliases: ["xc60 recharge"] },
+  { brand: "Volvo", model: "XC90", aliases: ["xc90 recharge"] }
 ];
 
 const BRAND_ALIASES: Record<string, string> = {
-  vw: "Volkswagen",
-  volkswagon: "Volkswagen",
-  volkswagen: "Volkswagen",
+  // Alfa Romeo
+  alfa: "Alfa Romeo",
+  alfaromeo: "Alfa Romeo",
+  alfromeo: "Alfa Romeo",
+
+  // Audi
+  audi: "Audi",
+
+  // BMW
+  bmw: "BMW",
+  beemer: "BMW",
+  bimmer: "BMW",
+
+  // Citroën
+  citroen: "Citroën",
+  ds: "Citroën", // DS is Citroën sub-brand; redirect loosely
+
+  // Cupra
+  cupra: "Cupra",
+
+  // Dacia
+  dacia: "Dacia",
+  datsun: "Dacia", // common confusion
+
+  // Fiat
+  fiat: "Fiat",
+
+  // Ford
+  ford: "Ford",
+
+  // Honda
+  honda: "Honda",
+
+  // Hyundai
+  hyundai: "Hyundai",
+  hundai: "Hyundai",
+  hyundei: "Hyundai",
+
+  // Jeep
+  jeep: "Jeep",
+
+  // Kia
+  kia: "Kia",
+
+  // Land Rover
+  landrover: "Land Rover",
+  landroover: "Land Rover",
+  landy: "Land Rover",
+  rr: "Land Rover",
+  rangerover: "Land Rover",
+
+  // Mazda
+  mazda: "Mazda",
+
+  // Mercedes
   mercedesbenz: "Mercedes",
   mercedes: "Mercedes",
   mb: "Mercedes",
-  bmw: "BMW",
-  beemer: "BMW",
-  audi: "Audi",
-  fiat: "Fiat",
-  ford: "Ford",
-  hyundai: "Hyundai",
-  kia: "Kia",
-  mazda: "Mazda",
+  benz: "Mercedes",
+
+  // MG
+  mg: "MG",
+
+  // Mini
+  mini: "Mini",
+  bmwmini: "Mini",
+
+  // Mitsubishi
+  mitsubishi: "Mitsubishi",
+  mitsu: "Mitsubishi",
+
+  // Nissan
   nissan: "Nissan",
+
+  // Opel
   opel: "Opel",
+  vauxhall: "Opel",
+
+  // Peugeot
   peugeot: "Peugeot",
+
+  // Porsche
+  porsche: "Porsche",
+
+  // Renault
   renault: "Renault",
+  renolt: "Renault",
+
+  // Seat
+  seat: "Seat",
+
+  // Skoda
   skoda: "Skoda",
+  shkoda: "Skoda",
+
+  // Suzuki
+  suzuki: "Suzuki",
+
+  // Tesla
   tesla: "Tesla",
+
+  // Toyota
   toyota: "Toyota",
+
+  // Volkswagen
+  vw: "Volkswagen",
+  volkswagon: "Volkswagen",
+  volkswagen: "Volkswagen",
+  volkswaagen: "Volkswagen",
+
+  // Volvo
   volvo: "Volvo"
 };
 

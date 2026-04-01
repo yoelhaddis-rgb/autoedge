@@ -18,13 +18,14 @@ export default async function DashboardPage() {
   const filteredTopDeals = topDeals.slice(0, 10);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="space-y-6 animate-fade-in">
+      {/* Page header */}
+      <div className="flex flex-wrap items-end justify-between gap-4 pb-2">
         <div>
-          <p className="text-sm text-foreground/60">Welcome back</p>
-          <h1 className="font-heading text-3xl text-foreground">Valuation Dashboard</h1>
-          <p className="mt-1 text-sm text-foreground/60">
-            Monitor valuation opportunities, compare spreads, and prioritize profitable inventory.
+          <p className="text-xs font-medium uppercase tracking-[0.14em] text-accent/60">Welcome back</p>
+          <h1 className="font-display mt-1 text-5xl tracking-wide text-foreground">VALUATION DASHBOARD</h1>
+          <p className="mt-2 text-sm text-foreground/45">
+            Monitor opportunities, compare spreads, and prioritize profitable inventory.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -32,13 +33,14 @@ export default async function DashboardPage() {
             Analyze vehicle
           </Link>
           <Link href="/deals" className={buttonClassName({ className: "gap-2" })}>
-            Open valuation opportunities
+            Open opportunities
             <ArrowUpRight className="h-4 w-4" />
           </Link>
         </div>
       </div>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {/* KPI grid */}
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           label="Total opportunities"
           value={String(summary.totalOpportunities)}
@@ -48,60 +50,60 @@ export default async function DashboardPage() {
         <MetricCard
           label="High potential"
           value={String(summary.highPotentialDeals)}
-          hint="Deal score 80+"
+          hint="Deal score ≥ 80"
           icon={<Flame className="h-4 w-4" />}
+          accent
         />
         <MetricCard
           label="High confidence"
           value={String(summary.highConfidenceDeals)}
-          hint="Confidence score 80+"
+          hint="Confidence score ≥ 80"
           icon={<ShieldCheck className="h-4 w-4" />}
         />
         <MetricCard
-          label="Average expected profit"
+          label="Avg expected profit"
           value={formatCurrency(summary.averageExpectedProfit)}
-          hint="Median estimate - asking price - costs"
+          hint="After recon, holding & risk"
           icon={<CircleDollarSign className="h-4 w-4" />}
         />
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2">
+      <section className="grid gap-3 sm:grid-cols-2">
         <MetricCard
           label="Saved analyses"
           value={String(summary.savedAnalyses)}
           hint="Opportunities saved for follow-up"
           icon={<Bookmark className="h-4 w-4" />}
         />
-        <Card className="flex items-center justify-between">
+        <Card className="flex items-center justify-between gap-4">
           <div>
-            <p className="font-heading text-lg text-foreground">Selective monitoring ready</p>
-            <p className="text-sm text-foreground/60">
-              Watchlist-driven monitoring can be plugged into `MonitoringService`.
+            <p className="font-heading text-base font-semibold text-foreground">Selective monitoring ready</p>
+            <p className="mt-0.5 text-sm text-foreground/45">
+              Plug source connectors into MonitoringService to activate.
             </p>
           </div>
           <Link href="/settings" className={buttonClassName({ variant: "secondary" })}>
-            Tweak settings
+            Settings
           </Link>
         </Card>
       </section>
 
-      <Card className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-foreground/65">Quick filters:</p>
-        <div className="flex flex-wrap gap-2">
-          <Link href="/deals?minScore=80" className={buttonClassName({ variant: "secondary" })}>
-            High Potential
-          </Link>
-          <Link href="/deals?sort=fresh" className={buttonClassName({ variant: "secondary" })}>
-            Fresh Listings
-          </Link>
-          <Link href="/deals?sort=profit_desc" className={buttonClassName({ variant: "secondary" })}>
-            Highest Profit
-          </Link>
-          <Link href="/saved" className={buttonClassName({ variant: "secondary" })}>
-            Saved Deals
-          </Link>
-        </div>
-      </Card>
+      {/* Quick filters */}
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border/40 bg-white/[0.02] px-4 py-3">
+        <p className="text-xs font-medium uppercase tracking-[0.12em] text-foreground/30 mr-2">Quick filters</p>
+        <Link href="/deals?minScore=80" className={buttonClassName({ variant: "secondary", className: "text-xs h-8" })}>
+          High Potential
+        </Link>
+        <Link href="/deals?sort=fresh" className={buttonClassName({ variant: "secondary", className: "text-xs h-8" })}>
+          Fresh Listings
+        </Link>
+        <Link href="/deals?sort=profit_desc" className={buttonClassName({ variant: "secondary", className: "text-xs h-8" })}>
+          Highest Profit
+        </Link>
+        <Link href="/saved" className={buttonClassName({ variant: "secondary", className: "text-xs h-8" })}>
+          Saved Deals
+        </Link>
+      </div>
 
       <section className="grid gap-4 xl:grid-cols-[1.5fr_1fr]">
         <Card>

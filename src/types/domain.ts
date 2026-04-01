@@ -26,6 +26,12 @@ export interface DealerPreference {
   transmissions: TransmissionType[];
   monitoringIntensity: MonitoringIntensity;
   selectedSourceGroups: string[];
+  /** Nullable — null means "use engine default (€620)". */
+  reconCostBaseOverride: number | null;
+  /** Nullable — null means "use engine default (€12/day base)". */
+  dailyHoldingCostOverride: number | null;
+  /** Nullable — null means "use engine default (€220)". */
+  riskBufferBaseOverride: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -70,9 +76,8 @@ export interface Valuation {
    * How the resale estimate was derived.
    * "comparable_based" — derived from real listings in the database.
    * "model_based"      — no comparables found; uses the Dutch market heuristic baseline.
-   * Absent on valuations created before this field was introduced.
    */
-  valuationSource?: "comparable_based" | "model_based";
+  valuationSource: "comparable_based" | "model_based";
 }
 
 export interface Comparable {
@@ -107,4 +112,14 @@ export interface DealOverview {
 
 export interface DealDetail extends DealOverview {
   comparables: Comparable[];
+}
+
+export interface DealStatusHistoryEntry {
+  id: string;
+  dealerId: string;
+  listingId: string;
+  oldStatus: DealLifecycleStatus | null;
+  newStatus: DealLifecycleStatus;
+  note: string;
+  changedAt: string;
 }

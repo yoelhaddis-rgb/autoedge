@@ -91,6 +91,9 @@ export async function updatePreferencesAction(formData: FormData) {
     transmissions: parseMultiValue(formData.get("transmissions")) as typeof current.transmissions,
     monitoringIntensity: parseMonitoringIntensity(formData.get("monitoringIntensity"), current.monitoringIntensity),
     selectedSourceGroups: parseMultiValue(formData.get("selectedSourceGroups")),
+    reconCostBaseOverride: parseOptionalNumber(formData.get("reconCostBaseOverride"), { min: 0, max: 10000 }),
+    dailyHoldingCostOverride: parseOptionalNumber(formData.get("dailyHoldingCostOverride"), { min: 0, max: 500 }),
+    riskBufferBaseOverride: parseOptionalNumber(formData.get("riskBufferBaseOverride"), { min: 0, max: 10000 }),
     updatedAt: new Date().toISOString()
   };
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { CarFront, CheckCircle2, CircleHelp, PencilLine } from "lucide-react";
+import { useActionState, useEffect, useMemo, useState, type FormEvent } from "react";
+import { AlertCircle, CarFront, CheckCircle2, CircleHelp, Loader2, PencilLine } from "lucide-react";
 import { analyzeVehicleAction } from "@/actions/analyze";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -113,6 +113,7 @@ function getSuggestionConfidenceLabel(confidence: number): string {
 }
 
 export function AnalyzeVehicleWizard({ supabaseReady }: AnalyzeVehicleWizardProps) {
+  const [actionState, formAction, isPending] = useActionState(analyzeVehicleAction, null);
   const [step, setStep] = useState<"edit" | "review">("edit");
   const [draft, setDraft] = useState<AnalyzeVehicleDraft>(DEFAULT_DRAFT);
   const [editBrand, setEditBrand] = useState(DEFAULT_DRAFT.brand);
@@ -208,14 +209,21 @@ export function AnalyzeVehicleWizard({ supabaseReady }: AnalyzeVehicleWizardProp
     const hasImagePreview = isHttpImageUrl(draft.imageUrl);
 
     return (
-      <form action={analyzeVehicleAction} className="space-y-4">
+      <form action={formAction} className="space-y-4">
         {Object.entries(draft).map(([key, value]) => (
           <input key={key} type="hidden" name={key} value={value} />
         ))}
 
-        <div className="rounded-xl border border-success/35 bg-success/10 p-3 text-sm text-success">
-          Review this vehicle once before final analysis.
-        </div>
+        {actionState?.error ? (
+          <div className="flex items-start gap-3 rounded-xl border border-danger/35 bg-danger/10 p-3 text-sm text-danger">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{actionState.error}</span>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-success/35 bg-success/10 p-3 text-sm text-success">
+            Review this vehicle once before final analysis.
+          </div>
+        )}
 
         <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
           <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
@@ -286,13 +294,17 @@ export function AnalyzeVehicleWizard({ supabaseReady }: AnalyzeVehicleWizardProp
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-2">
-          <Button type="button" variant="secondary" className="gap-2" onClick={() => setStep("edit")}>
+          <Button type="button" variant="secondary" className="gap-2" onClick={() => setStep("edit")} disabled={isPending}>
             <PencilLine className="h-4 w-4" />
             Edit details
           </Button>
-          <Button type="submit" className="gap-2" disabled={!supabaseReady}>
-            <CheckCircle2 className="h-4 w-4" />
-            Confirm and analyze
+          <Button type="submit" className="gap-2" disabled={!supabaseReady || isPending}>
+            {isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4" />
+            )}
+            {isPending ? "Analyzing..." : "Confirm and analyze"}
           </Button>
         </div>
       </form>

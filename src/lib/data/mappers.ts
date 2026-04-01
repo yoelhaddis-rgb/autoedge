@@ -6,6 +6,7 @@ import type {
   Listing,
   Valuation
 } from "@/types/domain";
+import type { ValuationSource } from "@/lib/services/valuation-engine";
 
 type ListingRow = Database["public"]["Tables"]["listings"]["Row"];
 type ValuationRow = Database["public"]["Tables"]["valuations"]["Row"];
@@ -39,6 +40,7 @@ export function mapListingRow(row: ListingRow): Listing {
 }
 
 export function mapValuationRow(row: ValuationRow): Valuation {
+  const source = row.valuation_source as ValuationSource;
   return {
     id: row.id,
     listingId: row.listing_id,
@@ -51,7 +53,8 @@ export function mapValuationRow(row: ValuationRow): Valuation {
     dealScore: row.deal_score,
     reasons: row.reasons,
     risks: row.risks,
-    createdAt: row.created_at
+    createdAt: row.created_at,
+    valuationSource: source === "model_based" ? "model_based" : "comparable_based"
   };
 }
 
@@ -95,6 +98,9 @@ export function mapPreferenceRow(row: PreferenceRow): DealerPreference {
     transmissions: row.transmissions as DealerPreference["transmissions"],
     monitoringIntensity: row.monitoring_intensity as DealerPreference["monitoringIntensity"],
     selectedSourceGroups: row.selected_source_groups,
+    reconCostBaseOverride: row.recon_cost_base_override,
+    dailyHoldingCostOverride: row.daily_holding_cost_override,
+    riskBufferBaseOverride: row.risk_buffer_base_override,
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };

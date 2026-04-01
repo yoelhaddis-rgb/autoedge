@@ -12,10 +12,13 @@ type ButtonProps = PropsWithChildren<
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-accent text-white border border-accent/70 shadow-glow hover:bg-accent/90 disabled:bg-accent/40 disabled:shadow-none",
-  secondary: "bg-white/10 text-foreground border border-white/20 hover:bg-white/15",
-  ghost: "bg-transparent text-foreground border border-transparent hover:bg-white/10",
-  danger: "bg-danger/20 text-danger border border-danger/40 hover:bg-danger/30"
+    "bg-accent text-background border border-accent/80 shadow-glow-sm hover:bg-accent/90 hover:shadow-glow active:scale-[0.98] disabled:bg-accent/30 disabled:shadow-none disabled:text-background/50",
+  secondary:
+    "bg-white/[0.05] text-foreground border border-border/80 hover:bg-white/[0.09] hover:border-accent/30 active:scale-[0.98]",
+  ghost:
+    "bg-transparent text-foreground/70 border border-transparent hover:bg-white/[0.06] hover:text-foreground active:scale-[0.98]",
+  danger:
+    "bg-danger/10 text-danger border border-danger/30 hover:bg-danger/20 active:scale-[0.98]"
 };
 
 export function buttonClassName({
@@ -28,7 +31,7 @@ export function buttonClassName({
   className?: string;
 } = {}) {
   return cn(
-    "inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition",
+    "inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-150",
     variantStyles[variant],
     fullWidth && "w-full",
     className

@@ -17,61 +17,71 @@ type DealsTableProps = {
 
 export function DealsTable({ deals }: DealsTableProps) {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-white/10 bg-[#0d131f]">
+    <div className="overflow-x-auto rounded-xl border border-border/50 bg-background">
       <table className="min-w-full text-left text-sm">
-        <thead className="border-b border-white/10 text-foreground/60">
-          <tr>
-            <th className="px-4 py-3 font-medium">Vehicle</th>
-            <th className="px-4 py-3 font-medium">Asking</th>
-            <th className="px-4 py-3 font-medium">Market Range</th>
-            <th className="px-4 py-3 font-medium">Profit</th>
-            <th className="px-4 py-3 font-medium">Score</th>
-            <th className="px-4 py-3 font-medium">Confidence</th>
-            <th className="px-4 py-3 font-medium">Status</th>
-            <th className="px-4 py-3 font-medium">Freshness</th>
-            <th className="px-4 py-3 font-medium" />
+        <thead>
+          <tr className="border-b border-border/50">
+            <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground/35">Vehicle</th>
+            <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground/35">Asking</th>
+            <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground/35">Range</th>
+            <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground/35">Profit</th>
+            <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground/35">Score</th>
+            <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground/35">Confidence</th>
+            <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground/35">Status</th>
+            <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground/35">Age</th>
+            <th className="px-4 py-3" />
           </tr>
         </thead>
         <tbody>
-          {deals.map((deal) => (
-            <tr key={deal.listing.id} className="border-b border-white/5 text-foreground/85">
-              <td className="px-4 py-4">
-                <p className="font-semibold text-foreground">{deal.listing.title}</p>
-                <p className="text-xs text-foreground/55">
-                  {deal.listing.year} • {formatMileage(deal.listing.mileage)} • {deal.listing.fuel} • {deal.listing.transmission}
+          {deals.map((deal, i) => (
+            <tr
+              key={deal.listing.id}
+              className="group border-b border-border/30 transition-colors last:border-0 hover:bg-accent/[0.03]"
+            >
+              <td className="px-4 py-3.5">
+                <p className="font-medium text-foreground group-hover:text-accent/90 transition-colors">
+                  {deal.listing.title}
                 </p>
-                <p className="text-xs text-foreground/55">
-                  {deal.listing.location} • {deal.listing.source}
+                <p className="mt-0.5 text-xs text-foreground/40">
+                  {deal.listing.year} · {formatMileage(deal.listing.mileage)} · {deal.listing.fuel}
                 </p>
+                <p className="text-xs text-foreground/30">{deal.listing.location} · {deal.listing.source}</p>
               </td>
-              <td className="px-4 py-4 font-semibold">{formatCurrency(deal.listing.askingPrice)}</td>
-              <td className="px-4 py-4 text-foreground/70">
-                {formatCurrency(deal.valuation.lowEstimate)} - {formatCurrency(deal.valuation.highEstimate)}
+              <td className="px-4 py-3.5 font-semibold text-foreground">
+                {formatCurrency(deal.listing.askingPrice)}
               </td>
-              <td
-                className={`px-4 py-4 font-semibold ${
-                  deal.valuation.expectedProfit >= 0 ? "text-success" : "text-danger"
-                }`}
-              >
+              <td className="px-4 py-3.5 text-xs text-foreground/50">
+                {formatCurrency(deal.valuation.lowEstimate)}
+                <span className="mx-1 text-foreground/25">–</span>
+                {formatCurrency(deal.valuation.highEstimate)}
+              </td>
+              <td className={`px-4 py-3.5 font-semibold ${deal.valuation.expectedProfit >= 0 ? "text-success" : "text-danger"}`}>
                 {formatCurrency(deal.valuation.expectedProfit)}
               </td>
-              <td className="px-4 py-4">
+              <td className="px-4 py-3.5">
                 <DealScoreBadge score={deal.valuation.dealScore} label={deal.scoreLabel} />
               </td>
-              <td className="px-4 py-4">
+              <td className="px-4 py-3.5">
                 <Badge className={getConfidenceClass(deal.valuation.confidenceScore)}>
-                  {getConfidenceLabel(deal.valuation.confidenceScore)} • {deal.valuation.confidenceScore}/100
+                  {getConfidenceLabel(deal.valuation.confidenceScore)} · {deal.valuation.confidenceScore}
                 </Badge>
               </td>
-              <td className="px-4 py-4">
+              <td className="px-4 py-3.5">
                 <Badge className={getDealStatusClass(deal.status)}>{getDealStatusLabel(deal.status)}</Badge>
-                {deal.note && <p className="mt-1 max-w-[220px] truncate text-xs text-foreground/55">{deal.note}</p>}
+                {deal.note && (
+                  <p className="mt-1 max-w-[200px] truncate text-xs text-foreground/35 italic">
+                    {deal.note}
+                  </p>
+                )}
               </td>
-              <td className="px-4 py-4 text-foreground/60">{deal.freshnessHours}h ago</td>
-              <td className="px-4 py-4">
-                <Link href={`/deals/${deal.listing.id}`} className="inline-flex items-center gap-1 text-accent hover:text-accent/80">
+              <td className="px-4 py-3.5 text-xs text-foreground/35">{deal.freshnessHours}h</td>
+              <td className="px-4 py-3.5">
+                <Link
+                  href={`/deals/${deal.listing.id}`}
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-accent/60 transition-colors hover:text-accent"
+                >
                   Open
-                  <ArrowUpRight className="h-4 w-4" />
+                  <ArrowUpRight className="h-3.5 w-3.5" />
                 </Link>
               </td>
             </tr>

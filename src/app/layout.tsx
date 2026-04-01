@@ -1,16 +1,23 @@
 import type { Metadata } from "next";
-import { Manrope, Sora } from "next/font/google";
+import { DM_Sans, Outfit, Bebas_Neue } from "next/font/google";
 import "@/app/globals.css";
 
-const bodyFont = Manrope({
+const bodyFont = DM_Sans({
   variable: "--font-body",
   subsets: ["latin"],
   display: "swap"
 });
 
-const headingFont = Sora({
+const headingFont = Outfit({
   variable: "--font-heading",
   subsets: ["latin"],
+  display: "swap"
+});
+
+const displayFont = Bebas_Neue({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: "400",
   display: "swap"
 });
 
@@ -27,7 +34,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${bodyFont.variable} ${headingFont.variable} antialiased`}>{children}</body>
+      <body className={`${bodyFont.variable} ${headingFont.variable} ${displayFont.variable} antialiased`}>{children}</body>
     </html>
   );
 }

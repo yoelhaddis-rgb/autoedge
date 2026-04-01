@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonClassName } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getCurrentDealerContext } from "@/lib/services/auth";
-import { getDealDetail } from "@/lib/services/deals";
+import { getDealDetail, getDealStatusHistory } from "@/lib/services/deals";
 import { buildValuationCostBreakdown } from "@/lib/services/valuation-engine";
 import { getDealStatusClass, getDealStatusLabel } from "@/lib/utils/deal";
 import { formatCurrency, formatMileage } from "@/lib/utils/format";
@@ -54,7 +54,10 @@ export default async function DealDetailPage({ params, searchParams }: DealDetai
   const { id } = await params;
   const query = await searchParams;
   const context = await getCurrentDealerContext();
-  const deal = await getDealDetail(id, context.dealerId);
+  const [deal, statusHistory] = await Promise.all([
+    getDealDetail(id, context.dealerId),
+    getDealStatusHistory(id, context.dealerId)
+  ]);
 
   if (!deal) {
     notFound();
@@ -88,10 +91,10 @@ export default async function DealDetailPage({ params, searchParams }: DealDetai
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm text-foreground/55">Deal detail</p>
-          <h1 className="font-heading text-3xl text-foreground">{deal.listing.title}</h1>
-          <p className="mt-1 text-sm text-foreground/60">
-            {deal.listing.source} • {deal.listing.location} • listed {deal.freshnessHours}h ago
+          <p className="text-xs font-medium uppercase tracking-[0.14em] text-accent/60">Deal detail</p>
+          <h1 className="font-display mt-1 text-4xl tracking-wide text-foreground">{deal.listing.title.toUpperCase()}</h1>
+          <p className="mt-2 text-sm text-foreground/40">
+            {deal.listing.source} · {deal.listing.location} · listed {deal.freshnessHours}h ago
           </p>
         </div>
 
@@ -254,6 +257,16 @@ export default async function DealDetailPage({ params, searchParams }: DealDetai
         <div className="space-y-6">
           <Card>
             <p className="mb-4 font-heading text-xl text-foreground">Analysis panel</p>
+
+            {deal.valuation.valuationSource === "model_based" && (
+              <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-300">
+                <p className="font-semibold">Heuristische schatting</p>
+                <p className="mt-0.5 text-amber-300/80">
+                  Er zijn geen vergelijkbare listings gevonden. De waardebepaling is berekend op basis van een heuristisch
+                  NL-marktmodel — geen marktdata. Verifieer de prijs via een live bron voordat je een beslissing neemt.
+                </p>
+              </div>
+            )}
             <div className="space-y-3 text-sm">
               <div className="flex items-start justify-between rounded-xl border border-white/10 bg-white/[0.03] p-3">
                 <span className="inline-flex items-center gap-2 text-foreground/65">
@@ -379,6 +392,39 @@ export default async function DealDetailPage({ params, searchParams }: DealDetai
               </p>
             </div>
             <DealStatusActions listingId={deal.listing.id} note={deal.note} status={deal.status} />
+
+            {statusHistory.length > 0 && (
+              <div className="mt-4 border-t border-white/10 pt-4">
+                <p className="mb-3 text-xs uppercase tracking-[0.14em] text-foreground/55">Status history</p>
+                <ol className="space-y-2">
+                  {statusHistory.map((entry) => (
+                    <li key={entry.id} className="flex items-start gap-3 text-sm">
+                      <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-foreground/30" />
+                      <div>
+                        <p className="text-foreground/75">
+                          {entry.oldStatus ? (
+                            <>
+                              <span className="font-medium text-foreground">{entry.oldStatus}</span>
+                              {" → "}
+                            </>
+                          ) : null}
+                          <span className="font-medium text-foreground">{entry.newStatus}</span>
+                        </p>
+                        <p className="text-xs text-foreground/45">
+                          {new Date(entry.changedAt).toLocaleString("nl-NL", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit"
+                          })}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
           </Card>
         </div>
       </section>

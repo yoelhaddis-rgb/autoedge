@@ -10,35 +10,49 @@ export function DealerSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="sticky top-0 hidden h-screen w-72 border-r border-white/10 bg-[#090f19] px-5 py-6 lg:block">
-      <Brand className="mb-8" />
+    <aside className="sticky top-0 hidden h-screen w-72 flex-col border-r border-border/50 bg-background lg:flex">
+      {/* Subtle amber line at top */}
+      <div className="h-px w-full bg-gradient-to-r from-accent/50 via-accent/20 to-transparent" />
 
-      <nav className="space-y-2">
-        {dealerNavItems.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
-          const Icon = item.icon;
+      <div className="flex flex-1 flex-col px-5 py-6">
+        <Brand className="mb-10" />
 
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition",
-                isActive
-                  ? "bg-accent/20 text-accent"
-                  : "text-foreground/70 hover:bg-white/10 hover:text-foreground"
-              )}
-            >
-              <Icon className="h-4 w-4" />
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
+        <nav className="space-y-0.5">
+          {dealerNavItems.map((item) => {
+            const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const Icon = item.icon;
 
-      <div className="mt-10 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-foreground/70">
-        <p className="mb-2 font-medium text-foreground">Edge Feed</p>
-        <p>New listings are scored every 30 minutes. Connect scrapers in `src/lib/services/scraper-pipeline.ts`.</p>
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150",
+                  isActive
+                    ? "bg-accent/10 text-accent"
+                    : "text-foreground/50 hover:bg-white/[0.05] hover:text-foreground/90"
+                )}
+              >
+                {/* Active indicator */}
+                {isActive && (
+                  <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r-full bg-accent" />
+                )}
+                <Icon className={cn("h-4 w-4 shrink-0", isActive ? "text-accent" : "text-foreground/35 group-hover:text-foreground/60")} />
+                <span className="tracking-wide">{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Bottom info panel */}
+        <div className="mt-auto pt-6">
+          <div className="rounded-xl border border-accent/10 bg-accent/[0.03] p-4">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-accent/70">Edge Feed</p>
+            <p className="text-xs leading-relaxed text-foreground/40">
+              Listings are scored on analysis. Connect source connectors to activate live feed.
+            </p>
+          </div>
+        </div>
       </div>
     </aside>
   );

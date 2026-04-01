@@ -806,7 +806,9 @@ export const mockValuations: Valuation[] = seedDeals.map((deal, index) => ({
   dealScore: deal.dealScore,
   reasons: deal.reasons,
   risks: deal.risks,
-  createdAt: hoursAgo((index + 1) * 2)
+  createdAt: hoursAgo((index + 1) * 2),
+  // Seed deals have mock comparables, so treat them as comparable_based.
+  valuationSource: "comparable_based" as const
 }));
 
 export const mockComparables: Comparable[] = seedDeals.flatMap((deal, index) => {
@@ -861,6 +863,9 @@ export const mockDealerPreferences: DealerPreference = {
   transmissions: ["Automatic", "Manual"],
   monitoringIntensity: "balanced",
   selectedSourceGroups: ["DealerStock NL", "PremiumLease Exchange", "RegionalAutoHub"],
+  reconCostBaseOverride: null,
+  dailyHoldingCostOverride: null,
+  riskBufferBaseOverride: null,
   createdAt: hoursAgo(200),
   updatedAt: hoursAgo(4)
 };

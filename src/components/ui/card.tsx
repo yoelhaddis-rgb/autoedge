@@ -7,7 +7,13 @@ type CardProps = PropsWithChildren<{
 
 export function Card({ className, children }: CardProps) {
   return (
-    <div className={cn("rounded-2xl border border-border/70 bg-card/95 p-5 shadow-panel backdrop-blur", className)}>
+    <div
+      className={cn(
+        "relative rounded-2xl border border-border/60 bg-card p-5 shadow-panel",
+        "before:pointer-events-none before:absolute before:inset-0 before:rounded-2xl before:bg-card-shine",
+        className
+      )}
+    >
       {children}
     </div>
   );

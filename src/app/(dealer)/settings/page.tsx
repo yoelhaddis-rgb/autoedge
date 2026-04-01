@@ -13,9 +13,9 @@ export default async function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-sm text-foreground/60">Dealer profile</p>
-        <h1 className="font-heading text-3xl text-foreground">Preferences</h1>
-        <p className="mt-1 text-sm text-foreground/60">
+        <p className="text-xs font-medium uppercase tracking-[0.14em] text-accent/60">Dealer profile</p>
+        <h1 className="font-display mt-1 text-5xl tracking-wide text-foreground">PREFERENCES</h1>
+        <p className="mt-2 text-sm text-foreground/45">
           Tune your buying range so AutoEdge prioritizes opportunities within your practical price and mileage bands.
         </p>
       </div>
@@ -131,6 +131,54 @@ export default async function SettingsPage() {
               defaultValue={preferences.selectedSourceGroups.join(", ")}
               placeholder="DealerStock NL, PremiumLease Exchange, RegionalAutoHub"
             />
+          </div>
+
+          <div className="md:col-span-2 border-t border-white/10 pt-4">
+            <p className="mb-3 text-sm font-medium text-foreground/80">Geavanceerde kosteninstelling</p>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-1">
+                <label htmlFor="reconCostBaseOverride" className="text-sm text-foreground/70">
+                  Basis reconditiekosten (EUR)
+                </label>
+                <Input
+                  id="reconCostBaseOverride"
+                  name="reconCostBaseOverride"
+                  type="number"
+                  min={0}
+                  max={10000}
+                  defaultValue={preferences.reconCostBaseOverride ?? ""}
+                  placeholder="Standaard: €620"
+                />
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="dailyHoldingCostOverride" className="text-sm text-foreground/70">
+                  Dagelijkse holdingkosten (EUR/dag)
+                </label>
+                <Input
+                  id="dailyHoldingCostOverride"
+                  name="dailyHoldingCostOverride"
+                  type="number"
+                  min={0}
+                  max={500}
+                  defaultValue={preferences.dailyHoldingCostOverride ?? ""}
+                  placeholder="Standaard: €12 + 0,06% van prijs"
+                />
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="riskBufferBaseOverride" className="text-sm text-foreground/70">
+                  Basis risicobudget (EUR)
+                </label>
+                <Input
+                  id="riskBufferBaseOverride"
+                  name="riskBufferBaseOverride"
+                  type="number"
+                  min={0}
+                  max={10000}
+                  defaultValue={preferences.riskBufferBaseOverride ?? ""}
+                  placeholder="Standaard: €220"
+                />
+              </div>
+            </div>
           </div>
 
           <div className="md:col-span-2 flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm text-foreground/65">

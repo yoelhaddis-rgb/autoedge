@@ -23,6 +23,9 @@ create table if not exists public.dealer_preferences (
   transmissions text[] not null default '{Manual,Automatic}',
   monitoring_intensity text not null default 'balanced' check (monitoring_intensity in ('low', 'balanced', 'high')),
   selected_source_groups text[] not null default '{}',
+  recon_cost_base_override integer,
+  daily_holding_cost_override integer,
+  risk_buffer_base_override integer,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (dealer_id)
@@ -64,6 +67,7 @@ create table if not exists public.valuations (
   deal_score int not null check (deal_score >= 0 and deal_score <= 100),
   reasons text[] not null default '{}',
   risks text[] not null default '{}',
+  valuation_source text not null default 'comparable_based',
   created_at timestamptz not null default now(),
   unique (listing_id)
 );
@@ -90,10 +94,21 @@ create table if not exists public.deal_statuses (
   unique (dealer_id, listing_id)
 );
 
+create table if not exists public.deal_status_history (
+  id uuid primary key default gen_random_uuid(),
+  dealer_id uuid not null references public.profiles(id) on delete cascade,
+  listing_id uuid not null references public.listings(id) on delete cascade,
+  old_status text,
+  new_status text not null,
+  note text not null default '',
+  changed_at timestamptz not null default now()
+);
+
 create index if not exists idx_listings_first_seen on public.listings(first_seen_at desc);
 create index if not exists idx_valuations_deal_score on public.valuations(deal_score desc);
 create index if not exists idx_deal_statuses_dealer on public.deal_statuses(dealer_id);
 create index if not exists idx_listings_brand_model on public.listings(brand, model);
+create index if not exists idx_status_history_listing on public.deal_status_history(listing_id, changed_at desc);
 
 create or replace function public.handle_updated_at()
 returns trigger
@@ -121,6 +136,7 @@ alter table public.listings enable row level security;
 alter table public.valuations enable row level security;
 alter table public.comparables enable row level security;
 alter table public.deal_statuses enable row level security;
+alter table public.deal_status_history enable row level security;
 
 -- Profiles
 drop policy if exists "profile_read_own" on public.profiles;
@@ -219,4 +235,17 @@ create policy "deal_statuses_write_own"
 on public.deal_statuses
 for all
 using (auth.uid() = dealer_id)
+with check (auth.uid() = dealer_id);
+
+-- Deal status history is scoped to dealer
+drop policy if exists "status_history_read_own" on public.deal_status_history;
+create policy "status_history_read_own"
+on public.deal_status_history
+for select
+using (auth.uid() = dealer_id);
+
+drop policy if exists "status_history_insert_own" on public.deal_status_history;
+create policy "status_history_insert_own"
+on public.deal_status_history
+for insert
 with check (auth.uid() = dealer_id);

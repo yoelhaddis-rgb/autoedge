@@ -60,6 +60,9 @@ export async function upsertDealerPreferences(preferences: DealerPreference): Pr
       transmissions: preferences.transmissions,
       monitoring_intensity: preferences.monitoringIntensity,
       selected_source_groups: preferences.selectedSourceGroups,
+      recon_cost_base_override: preferences.reconCostBaseOverride,
+      daily_holding_cost_override: preferences.dailyHoldingCostOverride,
+      risk_buffer_base_override: preferences.riskBufferBaseOverride,
       updated_at: new Date().toISOString()
     },
     {

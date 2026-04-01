@@ -50,6 +50,9 @@ export interface Database {
           transmissions: string[];
           monitoring_intensity: string;
           selected_source_groups: string[];
+          recon_cost_base_override: number | null;
+          daily_holding_cost_override: number | null;
+          risk_buffer_base_override: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -112,6 +115,7 @@ export interface Database {
           deal_score: number;
           reasons: string[];
           risks: string[];
+          valuation_source: string;
           created_at: string;
         };
         Insert: Omit<Database["public"]["Tables"]["valuations"]["Row"], "id" | "created_at"> & {
@@ -180,6 +184,38 @@ export interface Database {
           },
           {
             foreignKeyName: "deal_statuses_listing_id_fkey";
+            columns: ["listing_id"];
+            isOneToOne: false;
+            referencedRelation: "listings";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      deal_status_history: {
+        Row: {
+          id: string;
+          dealer_id: string;
+          listing_id: string;
+          old_status: string | null;
+          new_status: string;
+          note: string;
+          changed_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["deal_status_history"]["Row"], "id" | "changed_at"> & {
+          id?: string;
+          changed_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["deal_status_history"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "deal_status_history_dealer_id_fkey";
+            columns: ["dealer_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "deal_status_history_listing_id_fkey";
             columns: ["listing_id"];
             isOneToOne: false;
             referencedRelation: "listings";

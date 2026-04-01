@@ -6,6 +6,8 @@ import { getCurrentDealerContext } from "@/lib/services/auth";
 import { analyzeVehicle } from "@/lib/services/analysis-service";
 import type { FuelType, TransmissionType } from "@/types/domain";
 
+export type AnalyzeVehicleActionState = { error: string } | null;
+
 function getString(formData: FormData, key: string): string {
   return String(formData.get(key) ?? "").trim();
 }
@@ -45,7 +47,11 @@ function isRedirectErrorLike(error: unknown): error is { digest: string } {
   return typeof digest === "string" && digest.startsWith("NEXT_REDIRECT");
 }
 
-export async function analyzeVehicleAction(formData: FormData) {
+// prevState is required by useActionState but unused here.
+export async function analyzeVehicleAction(
+  _prevState: AnalyzeVehicleActionState,
+  formData: FormData
+): Promise<AnalyzeVehicleActionState> {
   const context = await getCurrentDealerContext();
 
   try {
@@ -77,6 +83,6 @@ export async function analyzeVehicleAction(formData: FormData) {
     }
 
     const message = error instanceof Error ? error.message : "Vehicle analysis failed.";
-    redirect(`/deals/analyze?error=${encodeURIComponent(message)}`);
+    return { error: message };
   }
 }
