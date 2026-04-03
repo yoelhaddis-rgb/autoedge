@@ -5,7 +5,7 @@ const SOURCE_NAME = "AutoScout24";
 const SOURCE_GROUP = "AutoScout24";
 const BASE_URL = "https://www.autoscout24.nl";
 const PAGE_DELAY_MS = 800;
-const MAX_PAGES = 3;
+const MAX_PAGES = 5;
 const MAX_PRICE_THRESHOLD = 200_000;
 
 const FUEL_MAP: Record<string, Listing["fuel"]> = {
@@ -43,6 +43,71 @@ function normalizeTransmission(raw: string | undefined): Listing["transmission"]
   return TRANSMISSION_MAP[raw.toLowerCase()] ?? null;
 }
 
+// Parse Dutch-formatted price string or object: "€ 17.499" → 17499
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function parsePriceValue(raw: any): number | undefined {
+  if (typeof raw === "number") return raw > 0 ? raw : undefined;
+  if (typeof raw === "string") {
+    const n = Number(raw.replace(/[€\s]/g, "").replace(/\./g, "").replace(",", "."));
+    return Number.isFinite(n) && n > 0 ? n : undefined;
+  }
+  if (typeof raw === "object" && raw !== null) {
+    // New structure: { priceFormatted: "€ 17.499", ... }
+    return parsePriceValue(raw.priceFormatted ?? raw.value ?? raw.amount);
+  }
+  return undefined;
+}
+
+// Parse Dutch-formatted mileage string: "345.945 km" → 345945
+function parseMileageValue(raw: unknown): number | undefined {
+  if (typeof raw === "number") return raw >= 0 ? raw : undefined;
+  if (typeof raw === "string") {
+    const n = Number(raw.replace(/\./g, "").replace(/\s*km/i, "").trim());
+    return Number.isFinite(n) && n >= 0 ? n : undefined;
+  }
+  return undefined;
+}
+
+// Parse year from "09/2003", "2003", or a number
+function parseYearValue(raw: unknown): number | undefined {
+  if (typeof raw === "number") return raw > 1990 ? raw : undefined;
+  if (typeof raw === "string") {
+    const parts = raw.split("/");
+    const y = Number(parts[parts.length - 1]);
+    return Number.isFinite(y) && y > 1990 ? y : undefined;
+  }
+  return undefined;
+}
+
+// Extract year from vehicleDetails array: [{iconName:"calendar", data:"09/2003"}, ...]
+function yearFromVehicleDetails(details: unknown): number | undefined {
+  if (!Array.isArray(details)) return undefined;
+  for (const d of details) {
+    if (typeof d === "object" && d !== null) {
+      const entry = d as Record<string, unknown>;
+      if (entry.iconName === "calendar" && typeof entry.data === "string") {
+        return parseYearValue(entry.data);
+      }
+    }
+  }
+  return undefined;
+}
+
+// Extract HP from vehicleDetails array: [{iconName:"speedometer", data:"55 kW (75 PK)"}, ...]
+function powerHpFromVehicleDetails(details: unknown): number | undefined {
+  if (!Array.isArray(details)) return undefined;
+  for (const d of details) {
+    if (typeof d === "object" && d !== null) {
+      const entry = d as Record<string, unknown>;
+      if (entry.iconName === "speedometer" && typeof entry.data === "string") {
+        const match = entry.data.match(/\((\d+)\s*PK\)/i);
+        if (match) return Number(match[1]);
+      }
+    }
+  }
+  return undefined;
+}
+
 // Extract the listing array from AutoScout24's __NEXT_DATA__ JSON blob.
 // The path has changed a few times; try the most recent known paths in order.
 function extractListingsFromNextData(nextData: Record<string, unknown>): unknown[] {
@@ -75,23 +140,51 @@ function extractListingsFromNextData(nextData: Record<string, unknown>): unknown
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function normalizeListing(raw: any, brandSlug: string, modelSlug: string): Listing | null {
-  // Required fields
-  const askingPrice: number = raw.price ?? raw.priceParts?.[0]?.value ?? raw.priceValue;
-  const year: number = raw.year ?? raw.firstRegistration?.split("/")?.[1] ?? raw.registrationDate?.split("/")?.[1];
-  const mileage: number = raw.mileage ?? raw.km;
-  const brand: string = raw.make ?? raw.brand ?? brandSlug;
-  const model: string = raw.model ?? modelSlug;
+  // AutoScout24 2026 structure nests vehicle fields under raw.vehicle
+  const vehicle = (typeof raw.vehicle === "object" && raw.vehicle !== null)
+    ? raw.vehicle as Record<string, unknown>
+    : undefined;
+  const vehicleDetails: unknown = raw.vehicleDetails;
+
+  // Price: new = raw.price (object), old = raw.price (number) / raw.priceParts / raw.priceValue
+  const askingPrice =
+    parsePriceValue(raw.price) ??
+    parsePriceValue(raw.priceParts?.[0]?.value) ??
+    parsePriceValue(raw.priceValue);
+
+  // Year: new = vehicleDetails calendar entry, old = raw.year / raw.firstRegistration
+  const year =
+    yearFromVehicleDetails(vehicleDetails) ??
+    parseYearValue(raw.year) ??
+    parseYearValue(raw.firstRegistration?.split("/")?.[1]) ??
+    parseYearValue(raw.registrationDate?.split("/")?.[1]);
+
+  // Mileage: new = vehicle.mileageInKm (string), old = raw.mileage / raw.km (number)
+  const mileage =
+    parseMileageValue(vehicle?.mileageInKm) ??
+    parseMileageValue(raw.mileage) ??
+    parseMileageValue(raw.km);
+
+  // Brand: new = vehicle.make, old = raw.make / raw.brand
+  const brand: string = String(vehicle?.make ?? raw.make ?? raw.brand ?? brandSlug);
+
+  // Model: always use the canonical search slug — prevents "Golf VII" mismatches
+  const model: string = modelSlug;
 
   if (!askingPrice || !year || mileage == null || !brand || !model) return null;
-  if (typeof askingPrice !== "number" || askingPrice <= 0 || askingPrice > MAX_PRICE_THRESHOLD) return null;
-  if (typeof year !== "number" || year < 1990 || year > new Date().getFullYear() + 1) return null;
-  if (typeof mileage !== "number" || mileage < 0) return null;
+  if (askingPrice <= 0 || askingPrice > MAX_PRICE_THRESHOLD) return null;
+  if (year < 1990 || year > new Date().getFullYear() + 1) return null;
+  if (mileage < 0) return null;
 
-  const rawFuel: string | undefined = raw.fuel ?? raw.fuelType ?? raw.fuelCategory;
+  // Fuel: new = vehicle.fuel, old = raw.fuel / raw.fuelType / raw.fuelCategory
+  const rawFuel: string | undefined =
+    String(vehicle?.fuel ?? raw.fuel ?? raw.fuelType ?? raw.fuelCategory ?? "") || undefined;
   const fuel = normalizeFuel(rawFuel);
   if (!fuel) return null;
 
-  const rawTransmission: string | undefined = raw.transmission ?? raw.gearbox;
+  // Transmission: new = vehicle.transmission, old = raw.transmission / raw.gearbox
+  const rawTransmission: string | undefined =
+    String(vehicle?.transmission ?? raw.transmission ?? raw.gearbox ?? "") || undefined;
   const transmission = normalizeTransmission(rawTransmission) ?? "Manual";
 
   const externalId: string = String(raw.id ?? raw.guid ?? raw.listingId ?? "");
@@ -106,16 +199,26 @@ function normalizeListing(raw: any, brandSlug: string, modelSlug: string): Listi
   const sellerType: string =
     raw.seller?.type === "private" || raw.isPrivate ? "Private" : "Trader";
 
+  // Power: new = vehicleDetails speedometer entry, old = raw.powerKw / raw.powerHp
   const powerKw: number | undefined = raw.powerKw ?? raw.power?.kw;
-  const powerHp = powerKw ? Math.round(powerKw * 1.36) : (raw.powerHp ?? raw.power?.hp ?? 0);
+  const powerHp =
+    powerKw
+      ? Math.round(powerKw * 1.36)
+      : (raw.powerHp ?? raw.power?.hp ?? powerHpFromVehicleDetails(vehicleDetails) ?? 0);
 
-  const firstImage: string | undefined =
-    raw.images?.[0]?.url ?? raw.imageUrl ?? raw.thumbnail ?? undefined;
+  // Images: new = raw.images (string[]), old = raw.images[].url
+  const firstImage: string | undefined = (() => {
+    const imgs = raw.images;
+    if (!Array.isArray(imgs) || imgs.length === 0) return raw.imageUrl ?? raw.thumbnail ?? undefined;
+    return typeof imgs[0] === "string" ? imgs[0] : (imgs[0]?.url ?? undefined);
+  })();
 
-  const location: string = raw.location?.city ?? raw.city ?? raw.location ?? "";
-  const variant: string = raw.version ?? raw.variant ?? "";
+  const location: string = raw.location?.city ?? raw.city ?? (typeof raw.location === "string" ? raw.location : "") ?? "";
+
+  // Variant: new = vehicle.modelVersionInput (specific version), old = raw.version / raw.variant
+  const variant: string = String(vehicle?.modelVersionInput ?? raw.version ?? raw.variant ?? "");
   const title: string = raw.title ?? `${brand} ${model}${variant ? ` ${variant}` : ""}`;
-  const description: string = raw.description ?? raw.shortDescription ?? "";
+  const description: string = String(vehicle?.subtitle ?? raw.description ?? raw.shortDescription ?? "");
 
   return {
     id: `autoscout24-${externalId}`,
@@ -126,9 +229,9 @@ function normalizeListing(raw: any, brandSlug: string, modelSlug: string): Listi
     brand: brand.charAt(0).toUpperCase() + brand.slice(1),
     model: model.charAt(0).toUpperCase() + model.slice(1),
     variant,
-    year: Number(year),
-    mileage: Number(mileage),
-    askingPrice: Number(askingPrice),
+    year,
+    mileage,
+    askingPrice,
     fuel,
     transmission,
     powerHp: Number(powerHp),
@@ -145,7 +248,7 @@ function normalizeListing(raw: any, brandSlug: string, modelSlug: string): Listi
 async function fetchPage(brand: string, model: string, page: number): Promise<Listing[]> {
   const brandSlug = toBrandSlug(brand);
   const modelSlug = toModelSlug(model);
-  const url = `${BASE_URL}/lst/${brandSlug}/${modelSlug}?sort=price&atype=C&ustate=N%2CU&size=20&page=${page}`;
+  const url = `${BASE_URL}/lst/${brandSlug}/${modelSlug}?sort=standard&atype=C&ustate=N%2CU&size=20&page=${page}`;
 
   let html: string;
   try {

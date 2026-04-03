@@ -33,7 +33,7 @@ export function DealsTable({ deals }: DealsTableProps) {
           </tr>
         </thead>
         <tbody>
-          {deals.map((deal, i) => (
+          {deals.map((deal) => (
             <tr
               key={deal.listing.id}
               className="group border-b border-border/30 transition-colors last:border-0 hover:bg-accent/[0.03]"

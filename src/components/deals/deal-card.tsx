@@ -95,7 +95,7 @@ export function DealCard({ deal }: DealCardProps) {
         </div>
 
         {deal.note && (
-          <p className="truncate text-xs text-foreground/40 italic">"{deal.note}"</p>
+          <p className="truncate text-xs text-foreground/40 italic">&ldquo;{deal.note}&rdquo;</p>
         )}
 
         {/* CTA */}

@@ -54,8 +54,9 @@ supabase/
   migrations/        # incremental ALTER TABLE migrations
   seed.sql           # demo seed data
 scripts/
-  seed.ts            # TypeScript seed script (npm run seed)
-  ingest-golf.ts     # one-off validation: ingest VW Golf from AutoScout24 → verify DB
+  seed.ts               # TypeScript seed script (npm run seed)
+  ingest-golf.ts        # one-off validation: ingest VW Golf from AutoScout24 → verify DB
+  test-comparables.ts   # e2e test: ingest 5 models + assert comparableCount >= 3 for each
 ```
 
 ## Key domain concepts
@@ -88,7 +89,7 @@ Cost assumption defaults (overridable in Settings):
 
 AutoScout24 NL is the live market data source. The ingestion pipeline:
 
-1. `AutoScout24Connector.fetchInventory(query)` — fetches pages 1–3 of search results, extracts `__NEXT_DATA__` JSON, normalizes fuel/transmission to domain types, returns `Listing[]` with `listingType: "market_data"`
+1. `AutoScout24Connector.fetchInventory(query)` — fetches pages 1–5 of search results (`sort=standard`), extracts `__NEXT_DATA__` JSON, normalizes fuel/transmission to domain types, returns `Listing[]` with `listingType: "market_data"`
 2. `ingestMarketListings(brand, model)` — calls connector, upserts rows in batches of 20, returns `{ inserted, updated, skipped }`
 3. `ingestListingsAction` — auth-gated server action; blocks demo mode
 
@@ -125,7 +126,8 @@ Mock data includes 26 listings with valuations, comparables, and deal statuses.
 npm run dev      # start dev server on localhost:3000
 npm run build    # production build
 npm run seed     # seed Supabase with demo data (requires .env.local)
-npx tsx --env-file .env.local scripts/ingest-golf.ts  # validate AutoScout24 ingest pipeline
+npx tsx --env-file .env.local scripts/ingest-golf.ts       # validate AutoScout24 ingest pipeline
+npx tsx --env-file .env.local scripts/test-comparables.ts  # e2e comparable return test (5 models)
 ```
 
 ## Environment variables
@@ -158,3 +160,6 @@ Current migrations applied:
 7. Configurable cost overrides per dealer — recon, holding, risk buffer in Settings
 8. Phase 2: AutoScout24 NL market data ingestion — `listing_type` column, connector, ingest service, server action
 9. Fix: comparable selection now filters `listing_type = 'market_data'` only — manual deals excluded from comparable pool
+10. Fix: AutoScout24 connector updated for new nested `__NEXT_DATA__` structure (vehicle/price/vehicleDetails objects); `sort=standard`; 5 pages; always stores canonical `modelSlug` as model field
+11. Fix: pinned `@supabase/supabase-js@2.49.8` — v2.100.x bundled postgrest-js v2 with breaking type changes that caused `never` types on all `.from()` calls and blocked the build
+12. Fix: ingest/test scripts use `async function main()` pattern — avoids top-level await CJS error under Node.js v24
