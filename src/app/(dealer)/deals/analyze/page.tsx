@@ -17,9 +17,9 @@ export default async function AnalyzeVehiclePage({ searchParams }: AnalyzeVehicl
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm text-foreground/60">Manual valuation workflow</p>
-          <h1 className="font-heading text-3xl text-foreground">Analyze Vehicle</h1>
-          <p className="mt-1 text-sm text-foreground/60">
+          <p className="text-xs font-medium uppercase tracking-[0.14em] text-accent/60">Manual valuation</p>
+          <h1 className="font-display mt-1 text-5xl tracking-wide text-foreground">ANALYZE VEHICLE</h1>
+          <p className="mt-2 text-sm text-foreground/45">
             Enter a vehicle manually and AutoEdge will calculate valuation, profit potential, and comparable coverage.
           </p>
         </div>
@@ -38,8 +38,8 @@ export default async function AnalyzeVehiclePage({ searchParams }: AnalyzeVehicl
       {!supabaseReady && (
         <Card className="border-warning/40 bg-warning/10">
           <p className="text-sm text-warning">
-            Supabase is nog niet geconfigureerd. Vul `NEXT_PUBLIC_SUPABASE_URL` en
-            `NEXT_PUBLIC_SUPABASE_ANON_KEY` in `.env.local` en herstart `npm run dev`.
+            Supabase is not configured. Add `NEXT_PUBLIC_SUPABASE_URL` and
+            `NEXT_PUBLIC_SUPABASE_ANON_KEY` to `.env.local` and restart `npm run dev`.
           </p>
         </Card>
       )}

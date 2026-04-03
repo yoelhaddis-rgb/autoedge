@@ -28,7 +28,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
   return (
     <Card className="w-full max-w-md space-y-5">
       <div>
-        <p className="font-heading text-3xl text-foreground">Dealer sign in</p>
+        <p className="font-display text-4xl tracking-wide text-foreground">DEALER SIGN IN</p>
         <p className="mt-1 text-sm text-foreground/65">Access your AutoEdge deal intelligence dashboard.</p>
       </div>
 

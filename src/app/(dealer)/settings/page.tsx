@@ -134,11 +134,11 @@ export default async function SettingsPage() {
           </div>
 
           <div className="md:col-span-2 border-t border-white/10 pt-4">
-            <p className="mb-3 text-sm font-medium text-foreground/80">Geavanceerde kosteninstelling</p>
+            <p className="mb-3 text-sm font-medium text-foreground/80">Advanced cost settings</p>
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-1">
                 <label htmlFor="reconCostBaseOverride" className="text-sm text-foreground/70">
-                  Basis reconditiekosten (EUR)
+                  Base reconditioning cost (EUR)
                 </label>
                 <Input
                   id="reconCostBaseOverride"
@@ -147,12 +147,12 @@ export default async function SettingsPage() {
                   min={0}
                   max={10000}
                   defaultValue={preferences.reconCostBaseOverride ?? ""}
-                  placeholder="Standaard: €620"
+                  placeholder="Default: €620"
                 />
               </div>
               <div className="space-y-1">
                 <label htmlFor="dailyHoldingCostOverride" className="text-sm text-foreground/70">
-                  Dagelijkse holdingkosten (EUR/dag)
+                  Daily holding cost (EUR/day)
                 </label>
                 <Input
                   id="dailyHoldingCostOverride"
@@ -161,12 +161,12 @@ export default async function SettingsPage() {
                   min={0}
                   max={500}
                   defaultValue={preferences.dailyHoldingCostOverride ?? ""}
-                  placeholder="Standaard: €12 + 0,06% van prijs"
+                  placeholder="Default: €12 + 0.06% of price"
                 />
               </div>
               <div className="space-y-1">
                 <label htmlFor="riskBufferBaseOverride" className="text-sm text-foreground/70">
-                  Basis risicobudget (EUR)
+                  Base risk buffer (EUR)
                 </label>
                 <Input
                   id="riskBufferBaseOverride"
@@ -175,7 +175,7 @@ export default async function SettingsPage() {
                   min={0}
                   max={10000}
                   defaultValue={preferences.riskBufferBaseOverride ?? ""}
-                  placeholder="Standaard: €220"
+                  placeholder="Default: €220"
                 />
               </div>
             </div>

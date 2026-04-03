@@ -35,7 +35,8 @@ export function mapListingRow(row: ListingRow): Listing {
     description: row.description,
     imageUrls: row.image_urls,
     firstSeenAt: row.first_seen_at,
-    createdAt: row.created_at
+    createdAt: row.created_at,
+    listingType: row.listing_type as Listing["listingType"]
   };
 }
 

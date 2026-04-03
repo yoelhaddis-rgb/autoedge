@@ -21,7 +21,7 @@ import { Card } from "@/components/ui/card";
 import { getCurrentDealerContext } from "@/lib/services/auth";
 import { getDealDetail, getDealStatusHistory } from "@/lib/services/deals";
 import { buildValuationCostBreakdown } from "@/lib/services/valuation-engine";
-import { getDealStatusClass, getDealStatusLabel } from "@/lib/utils/deal";
+import { getConfidenceLabel, getDealScoreClass, getDealStatusClass, getDealStatusLabel } from "@/lib/utils/deal";
 import { formatCurrency, formatMileage } from "@/lib/utils/format";
 
 type DealDetailPageProps = {
@@ -80,6 +80,17 @@ export default async function DealDetailPage({ params, searchParams }: DealDetai
     targetExpectedCosts: deal.valuation.expectedCosts
   });
   const expectedProfitClass = deal.valuation.expectedProfit >= 0 ? "text-success" : "text-danger";
+
+  // Market position bar calculations
+  const rangeSpan = deal.valuation.highEstimate - deal.valuation.lowEstimate;
+  const hasRange = rangeSpan > 0;
+  const askingPct = hasRange
+    ? Math.max(0, Math.min(100, ((deal.listing.askingPrice - deal.valuation.lowEstimate) / rangeSpan) * 100))
+    : 50;
+  const medianPct = hasRange
+    ? Math.max(0, Math.min(100, ((deal.valuation.medianEstimate - deal.valuation.lowEstimate) / rangeSpan) * 100))
+    : 50;
+  const askingBelowMedian = deal.listing.askingPrice <= deal.valuation.medianEstimate;
 
   return (
     <div className="space-y-6">
@@ -260,13 +271,35 @@ export default async function DealDetailPage({ params, searchParams }: DealDetai
 
             {deal.valuation.valuationSource === "model_based" && (
               <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-300">
-                <p className="font-semibold">Heuristische schatting</p>
+                <p className="font-semibold">Heuristic estimate</p>
                 <p className="mt-0.5 text-amber-300/80">
-                  Er zijn geen vergelijkbare listings gevonden. De waardebepaling is berekend op basis van een heuristisch
-                  NL-marktmodel — geen marktdata. Verifieer de prijs via een live bron voordat je een beslissing neemt.
+                  No comparable listings found. This valuation is based on a heuristic NL market model — not live market
+                  data. Verify the price against a live source before making a buying decision.
                 </p>
               </div>
             )}
+            {/* At a glance */}
+            <div className="mb-4 grid grid-cols-3 gap-px overflow-hidden rounded-xl border border-white/10 bg-border/30">
+              <div className="bg-card px-4 py-3">
+                <p className="text-[10px] uppercase tracking-[0.12em] text-foreground/40">Profit</p>
+                <p className={`font-display text-3xl leading-tight ${expectedProfitClass}`}>
+                  {formatCurrency(deal.valuation.expectedProfit)}
+                </p>
+              </div>
+              <div className="bg-card px-4 py-3">
+                <p className="text-[10px] uppercase tracking-[0.12em] text-foreground/40">Score</p>
+                <p className={`font-display text-3xl leading-tight ${getDealScoreClass(deal.valuation.dealScore).split(" ").find(c => c.startsWith("text-")) ?? "text-foreground"}`}>
+                  {deal.valuation.dealScore}
+                </p>
+                <p className="text-[10px] text-foreground/40">{deal.scoreLabel}</p>
+              </div>
+              <div className="bg-card px-4 py-3">
+                <p className="text-[10px] uppercase tracking-[0.12em] text-foreground/40">Confidence</p>
+                <p className="font-display text-3xl leading-tight text-foreground">{deal.valuation.confidenceScore}</p>
+                <p className="text-[10px] text-foreground/40">{getConfidenceLabel(deal.valuation.confidenceScore)}</p>
+              </div>
+            </div>
+
             <div className="space-y-3 text-sm">
               <div className="flex items-start justify-between rounded-xl border border-white/10 bg-white/[0.03] p-3">
                 <span className="inline-flex items-center gap-2 text-foreground/65">
@@ -276,6 +309,40 @@ export default async function DealDetailPage({ params, searchParams }: DealDetai
                   {formatCurrency(deal.valuation.lowEstimate)} - {formatCurrency(deal.valuation.highEstimate)}
                 </span>
               </div>
+
+              {/* Market position bar */}
+              {hasRange && (
+                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                  <p className="mb-2 text-xs text-foreground/45">Asking price position</p>
+                  <div className="relative h-3 w-full overflow-hidden rounded-full bg-white/[0.06]">
+                    {/* Green zone: 0 → median */}
+                    <div
+                      className="absolute left-0 top-0 h-full bg-success/40"
+                      style={{ width: `${medianPct}%` }}
+                    />
+                    {/* Amber zone: median → 100 */}
+                    <div
+                      className="absolute top-0 h-full bg-warning/30"
+                      style={{ left: `${medianPct}%`, width: `${100 - medianPct}%` }}
+                    />
+                    {/* Median tick */}
+                    <div
+                      className="absolute top-0 h-full w-px bg-white/40"
+                      style={{ left: `${medianPct}%` }}
+                    />
+                    {/* Asking price marker */}
+                    <div
+                      className={`absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rotate-45 border ${askingBelowMedian ? "border-success bg-success" : "border-warning bg-warning"}`}
+                      style={{ left: `${askingPct}%` }}
+                    />
+                  </div>
+                  <div className="mt-1.5 flex justify-between text-[10px] text-foreground/35">
+                    <span>{formatCurrency(deal.valuation.lowEstimate)}</span>
+                    <span className="text-foreground/50">↑ median {formatCurrency(deal.valuation.medianEstimate)}</span>
+                    <span>{formatCurrency(deal.valuation.highEstimate)}</span>
+                  </div>
+                </div>
+              )}
 
               <div className="flex items-start justify-between rounded-xl border border-white/10 bg-white/[0.03] p-3">
                 <span className="inline-flex items-center gap-2 text-foreground/65">

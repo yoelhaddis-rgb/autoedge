@@ -1,4 +1,5 @@
 import type { Listing } from "@/types/domain";
+import { AutoScout24Connector } from "@/lib/services/connectors/autoscout24-connector";
 
 export type DealerInventoryQuery = {
   preferredBrands: string[];
@@ -40,6 +41,6 @@ export class SourceConnectorRegistry {
   }
 }
 
-// NOTE: Intentionally empty default setup for MVP.
-// Production connectors should implement DealerSourceConnector and be registered here.
-export const sourceConnectorRegistry = new SourceConnectorRegistry([]);
+export const sourceConnectorRegistry = new SourceConnectorRegistry([
+  new AutoScout24Connector()
+]);

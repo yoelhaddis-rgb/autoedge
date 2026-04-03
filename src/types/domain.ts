@@ -57,6 +57,7 @@ export interface Listing {
   imageUrls: string[];
   firstSeenAt: string;
   createdAt: string;
+  listingType: "deal" | "market_data";
 }
 
 export interface Valuation {

@@ -1,4 +1,4 @@
-import { calculateProfit } from "@/lib/utils/deal";
+import { buildConfidenceScore, buildDealScore, buildValuationCostBreakdown } from "@/lib/services/valuation-engine";
 import type {
   Comparable,
   DealLifecycleStatus,
@@ -791,25 +791,49 @@ export const mockListings: Listing[] = seedDeals.map((deal, index) => ({
   description: deal.description,
   imageUrls: [imagePool[index % imagePool.length], imagePool[(index + 3) % imagePool.length]],
   firstSeenAt: hoursAgo((index + 1) * 2),
-  createdAt: hoursAgo((index + 1) * 2)
+  createdAt: hoursAgo((index + 1) * 2),
+  listingType: "deal" as const
 }));
 
-export const mockValuations: Valuation[] = seedDeals.map((deal, index) => ({
-  id: `valuation-${index + 1}`,
-  listingId: deal.id,
-  lowEstimate: deal.lowEstimate,
-  medianEstimate: deal.medianEstimate,
-  highEstimate: deal.highEstimate,
-  expectedCosts: deal.expectedCosts,
-  expectedProfit: calculateProfit(deal.medianEstimate, deal.askingPrice, deal.expectedCosts),
-  confidenceScore: deal.confidenceScore,
-  dealScore: deal.dealScore,
-  reasons: deal.reasons,
-  risks: deal.risks,
-  createdAt: hoursAgo((index + 1) * 2),
-  // Seed deals have mock comparables, so treat them as comparable_based.
-  valuationSource: "comparable_based" as const
-}));
+// Mock comparables provide 2 entries per deal (1 strict, 1 relaxed).
+// Costs and scores are derived by the same engine used in production so that
+// demo-mode and live-mode output stay consistent.
+const MOCK_COMPARABLE_COUNT = 2;
+const MOCK_STRICT_MATCH_COUNT = 1;
+
+export const mockValuations: Valuation[] = seedDeals.map((deal, index) => {
+  const listing = mockListings[index];
+  const breakdown = buildValuationCostBreakdown({
+    listing,
+    estimatedResaleValue: deal.medianEstimate,
+    lowEstimate: deal.lowEstimate,
+    highEstimate: deal.highEstimate,
+    comparableCount: MOCK_COMPARABLE_COUNT,
+    strictMatchCount: MOCK_STRICT_MATCH_COUNT
+  });
+  const confidenceScore = buildConfidenceScore({
+    comparableCount: MOCK_COMPARABLE_COUNT,
+    strictMatchCount: MOCK_STRICT_MATCH_COUNT,
+    spreadRatio: breakdown.spreadRatio,
+    projectedDaysToSell: breakdown.projectedDaysToSell
+  });
+  const dealScore = buildDealScore(breakdown, confidenceScore);
+  return {
+    id: `valuation-${index + 1}`,
+    listingId: deal.id,
+    lowEstimate: deal.lowEstimate,
+    medianEstimate: deal.medianEstimate,
+    highEstimate: deal.highEstimate,
+    expectedCosts: breakdown.expectedCosts,
+    expectedProfit: breakdown.expectedProfit,
+    confidenceScore,
+    dealScore,
+    reasons: deal.reasons,
+    risks: deal.risks,
+    createdAt: hoursAgo((index + 1) * 2),
+    valuationSource: "comparable_based" as const
+  };
+});
 
 export const mockComparables: Comparable[] = seedDeals.flatMap((deal, index) => {
   const baseYear = Math.max(2015, deal.year - 1);

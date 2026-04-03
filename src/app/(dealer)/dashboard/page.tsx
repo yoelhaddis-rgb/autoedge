@@ -1,21 +1,33 @@
 import Link from "next/link";
-import { ArrowUpRight, Bookmark, CircleDollarSign, Flame, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowUpRight, CircleDollarSign, Flame, ShieldCheck, Sparkles } from "lucide-react";
 import { MetricCard } from "@/components/ui/metric-card";
+import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { DealsTable } from "@/components/deals/deals-table";
 import { buttonClassName } from "@/components/ui/button";
 import { getCurrentDealerContext } from "@/lib/services/auth";
 import { getDashboardSummary, getDeals } from "@/lib/services/deals";
+import { getDealStatusClass, getDealStatusLabel } from "@/lib/utils/deal";
 import { formatCurrency } from "@/lib/utils/format";
+import type { DealLifecycleStatus } from "@/types/domain";
+
+const LIFECYCLE_STATUSES: DealLifecycleStatus[] = ["new", "saved", "contacted", "bought", "ignored"];
 
 export default async function DashboardPage() {
   const context = await getCurrentDealerContext();
-  const summary = await getDashboardSummary(context.dealerId);
-  const topDeals = await getDeals(context.dealerId, {
-    sort: "score_desc"
-  });
+  const [summary, topDeals, profitDeals] = await Promise.all([
+    getDashboardSummary(context.dealerId),
+    getDeals(context.dealerId, { sort: "score_desc" }),
+    getDeals(context.dealerId, { sort: "profit_desc" })
+  ]);
 
   const filteredTopDeals = topDeals.slice(0, 10);
+
+  // Compute lifecycle counts from all deals
+  const lifecycleCounts = LIFECYCLE_STATUSES.reduce<Record<DealLifecycleStatus, number>>(
+    (acc, s) => ({ ...acc, [s]: topDeals.filter((d) => d.status === s).length }),
+    {} as Record<DealLifecycleStatus, number>
+  );
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -68,25 +80,25 @@ export default async function DashboardPage() {
         />
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-2">
-        <MetricCard
-          label="Saved analyses"
-          value={String(summary.savedAnalyses)}
-          hint="Opportunities saved for follow-up"
-          icon={<Bookmark className="h-4 w-4" />}
-        />
-        <Card className="flex items-center justify-between gap-4">
+      {/* Lifecycle snapshot */}
+      <Card>
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="font-heading text-base font-semibold text-foreground">Selective monitoring ready</p>
-            <p className="mt-0.5 text-sm text-foreground/45">
-              Plug source connectors into MonitoringService to activate.
-            </p>
+            <p className="font-heading text-base font-semibold text-foreground">Lifecycle snapshot</p>
+            <p className="text-sm text-foreground/45">Deal pipeline by current status.</p>
           </div>
-          <Link href="/settings" className={buttonClassName({ variant: "secondary" })}>
-            Settings
-          </Link>
-        </Card>
-      </section>
+          <div className="flex flex-wrap items-center gap-2">
+            {LIFECYCLE_STATUSES.map((s) => (
+              <Link key={s} href={`/deals?status=${s}`} className="group flex items-center gap-2">
+                <Badge className={`${getDealStatusClass(s)} transition-opacity group-hover:opacity-80`}>
+                  {getDealStatusLabel(s)}
+                </Badge>
+                <span className="text-sm font-semibold text-foreground/70">{lifecycleCounts[s]}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </Card>
 
       {/* Quick filters */}
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border/40 bg-white/[0.02] px-4 py-3">
@@ -120,10 +132,10 @@ export default async function DashboardPage() {
         </Card>
 
         <Card>
-          <p className="font-heading text-xl text-foreground">Top score queue</p>
-          <p className="mt-1 text-sm text-foreground/60">Highest-ranked deals across all sources.</p>
+          <p className="font-heading text-xl text-foreground">Highest return opportunities</p>
+          <p className="mt-1 text-sm text-foreground/60">Deals with the greatest expected profit margin.</p>
           <div className="mt-4 space-y-3">
-            {filteredTopDeals.slice(0, 6).map((deal) => (
+            {profitDeals.slice(0, 6).map((deal) => (
               <Link
                 key={deal.listing.id}
                 href={`/deals/${deal.listing.id}`}

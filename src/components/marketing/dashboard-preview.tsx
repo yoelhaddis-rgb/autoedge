@@ -27,7 +27,7 @@ const mockRows = [
 
 export function DashboardPreview() {
   return (
-    <div className="overflow-hidden rounded-3xl border border-white/15 bg-[#0b111c] shadow-glow">
+    <div className="overflow-hidden rounded-3xl border border-white/15 bg-card shadow-glow">
       <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
         <div>
           <p className="text-sm text-foreground/60">Dealer Dashboard Preview</p>

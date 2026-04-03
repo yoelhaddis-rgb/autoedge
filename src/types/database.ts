@@ -94,6 +94,7 @@ export interface Database {
           image_urls: string[];
           first_seen_at: string;
           created_at: string;
+          listing_type: string;
         };
         Insert: Omit<Database["public"]["Tables"]["listings"]["Row"], "id" | "created_at"> & {
           id?: string;

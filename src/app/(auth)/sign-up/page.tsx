@@ -14,7 +14,7 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
   return (
     <Card className="w-full max-w-md space-y-5">
       <div>
-        <p className="font-heading text-3xl text-foreground">Create dealer account</p>
+        <p className="font-display text-4xl tracking-wide text-foreground">CREATE ACCOUNT</p>
         <p className="mt-1 text-sm text-foreground/65">Start scanning profitable opportunities with AutoEdge.</p>
       </div>
 

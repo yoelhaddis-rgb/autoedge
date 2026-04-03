@@ -27,7 +27,7 @@ const valuePoints = [
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-spotlight bg-grid bg-[size:36px_36px]">
+    <main className="min-h-screen bg-amber-glow bg-grid bg-[size:36px_36px]">
       <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-6 sm:px-6 lg:px-8">
         <Brand />
         <div className="flex items-center gap-3">
@@ -45,8 +45,8 @@ export default function LandingPage() {
           <p className="mb-4 inline-flex rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs uppercase tracking-[0.22em] text-accent">
             B2B Deal Intelligence for Car Dealers
           </p>
-          <h1 className="font-heading text-4xl font-semibold leading-tight text-foreground sm:text-6xl">
-            Value used cars with confidence before you buy.
+          <h1 className="font-display text-6xl leading-none tracking-wide text-foreground sm:text-8xl">
+            VALUE USED CARS WITH CONFIDENCE BEFORE YOU BUY.
           </h1>
           <p className="mt-5 max-w-2xl text-lg text-foreground/70">
             AutoEdge combines dealer inventory snapshots, comparables, and a valuation engine to estimate market range
@@ -82,27 +82,28 @@ export default function LandingPage() {
 
       <section className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <SectionHeader
+          displayTitle
           eyebrow="How it works"
-          title="From listing to decision in under 60 seconds"
+          title="FROM LISTING TO DECISION IN UNDER 60 SECONDS"
           description="AutoEdge combines listing data, valuation logic and dealership preferences into one operational workflow."
         />
         <div className="grid gap-4 md:grid-cols-3">
           <div className="rounded-2xl border border-white/10 bg-card/80 p-5">
-            <p className="mb-2 text-sm text-accent">01</p>
+            <p className="mb-2 font-display text-2xl text-accent">01</p>
             <p className="font-heading text-xl text-foreground">Ingest listings</p>
             <p className="mt-2 text-foreground/65">
               Pull vehicle inventory from selected dealer source groups into a single normalized feed.
             </p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-card/80 p-5">
-            <p className="mb-2 text-sm text-accent">02</p>
+            <p className="mb-2 font-display text-2xl text-accent">02</p>
             <p className="font-heading text-xl text-foreground">Score opportunities</p>
             <p className="mt-2 text-foreground/65">
               Estimate market range, expected costs and margin. AutoEdge highlights top opportunities and key risks.
             </p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-card/80 p-5">
-            <p className="mb-2 text-sm text-accent">03</p>
+            <p className="mb-2 font-display text-2xl text-accent">03</p>
             <p className="font-heading text-xl text-foreground">Act immediately</p>
             <p className="mt-2 text-foreground/65">
               Save analyses, mark status, and open the original source listing in one click.
@@ -113,8 +114,9 @@ export default function LandingPage() {
 
       <section className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <SectionHeader
+          displayTitle
           eyebrow="Key features"
-          title="Built for dealers who optimize margin daily"
+          title="BUILT FOR DEALERS WHO OPTIMIZE MARGIN DAILY"
           description="Compact interfaces for fast scanning, clear analysis, and confident buying decisions."
         />
         <FeatureGrid />
@@ -122,8 +124,9 @@ export default function LandingPage() {
 
       <section className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <SectionHeader
+          displayTitle
           eyebrow="Pricing preview"
-          title="Start small and scale by dealership volume"
+          title="START SMALL AND SCALE BY DEALERSHIP VOLUME"
           description="Simple plans for independent dealers and dealer groups."
         />
         <PricingPreview />
@@ -132,7 +135,7 @@ export default function LandingPage() {
       <section className="mx-auto w-full max-w-7xl px-4 pb-20 pt-10 sm:px-6 lg:px-8">
         <div className="flex flex-col items-start justify-between gap-5 rounded-3xl border border-accent/35 bg-accent/10 p-6 sm:flex-row sm:items-center">
           <div>
-            <p className="font-heading text-2xl text-foreground">Ready to find better deals, faster?</p>
+            <p className="font-display text-4xl tracking-wide text-foreground">READY TO FIND BETTER DEALS, FASTER?</p>
             <p className="mt-1 text-foreground/70">Reduce wasted time on weak listings and focus on profitable inventory.</p>
           </div>
           <div className="flex gap-3">

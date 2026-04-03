@@ -27,9 +27,9 @@ export function DealsFilters({ sources, fuels, transmissions, statuses, current,
   return (
     <div className="space-y-2">
       {preferencesActive && (
-        <div className="flex items-center gap-2 text-sm text-blue-400">
+        <div className="flex items-center gap-2 text-sm text-accent">
           <Settings2 className="h-3.5 w-3.5 shrink-0" />
-          <span>Gefilterd op jouw voorkeuren</span>
+          <span>Filtered by your preferences</span>
           <Link href="/deals" className="ml-auto text-foreground/50 hover:text-foreground">
             Reset
           </Link>

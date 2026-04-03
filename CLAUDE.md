@@ -25,7 +25,7 @@ src/
       deals/         # deal list, analyze, [id] detail
       saved/
       settings/
-  actions/           # Next.js server actions (analyze, auth, deals, settings)
+  actions/           # Next.js server actions (analyze, auth, deals, settings, ingest)
   components/
     deals/           # DealCard, DealsTable, DealsFilters, DealStatusActions, etc.
     layout/          # sidebar, nav
@@ -40,6 +40,10 @@ src/
       deals.ts                # getDeals, getDealDetail, upsertDealStatus, getDealStatusHistory
       preferences.ts          # getDealerPreferences, upsertDealerPreferences
       dutch-market-baseline.ts # heuristic fallback when no comparables exist
+      market-ingest.ts        # ingestMarketListings(brand, model) — writes market_data rows
+      source-connectors.ts    # DealerSourceConnector interface + SourceConnectorRegistry
+      connectors/
+        autoscout24-connector.ts  # AutoScout24 NL fetcher + __NEXT_DATA__ parser
     supabase/        # client, server, env helpers
     utils/           # deal scoring labels, formatting, vehicle-suggestions fuzzy match
   types/
@@ -51,6 +55,7 @@ supabase/
   seed.sql           # demo seed data
 scripts/
   seed.ts            # TypeScript seed script (npm run seed)
+  ingest-golf.ts     # one-off validation: ingest VW Golf from AutoScout24 → verify DB
 ```
 
 ## Key domain concepts
@@ -60,22 +65,44 @@ scripts/
 - **ValuationSource**: `"comparable_based"` (real market data) | `"model_based"` (Dutch heuristic fallback)
 - **DealScore**: 0–100. ≥80 = High Potential, 60–79 = Interesting, 40–59 = Moderate, <40 = Risk
 - **DealLifecycleStatus**: `new | saved | contacted | ignored | bought`
+- **listing_type**: `"deal"` (manually-analyzed vehicle) | `"market_data"` (AutoScout24 ingested for comparables)
 
 ## Valuation engine
 
 `ComparableInventoryValuationEngine` in `valuation-engine.ts`:
 
 1. Finds comparable listings in Supabase (strict → relaxed query fallback)
-2. Scores similarity by year distance, mileage, price, fuel, transmission
-3. Computes `low/median/highEstimate` from comparable percentiles
-4. Falls back to `dutchMarketBaselineEstimate()` when no comparables exist (marks as `model_based`)
-5. Estimates costs: `reconCosts + holdingCost + riskBuffer` — all overridable per dealer via `DealerCostOverrides`
-6. Returns `ComputedValuation` with scores, reasons, risks, and `valuationSource`
+2. **Comparable pool is `listing_type = 'market_data'` rows only** — manually-analyzed deals are excluded
+3. Scores similarity by year distance, mileage, price, fuel, transmission
+4. Computes `low/median/highEstimate` from comparable percentiles
+5. Falls back to `dutchMarketBaselineEstimate()` when no comparables exist (marks as `model_based`)
+6. Estimates costs: `reconCosts + holdingCost + riskBuffer` — all overridable per dealer via `DealerCostOverrides`
+7. Returns `ComputedValuation` with scores, reasons, risks, and `valuationSource`
 
 Cost assumption defaults (overridable in Settings):
 - Recon base: €620
 - Daily holding: €12 + 0.06% of asking price
 - Risk buffer base: €220
+
+## Market data ingestion (Phase 2)
+
+AutoScout24 NL is the live market data source. The ingestion pipeline:
+
+1. `AutoScout24Connector.fetchInventory(query)` — fetches pages 1–3 of search results, extracts `__NEXT_DATA__` JSON, normalizes fuel/transmission to domain types, returns `Listing[]` with `listingType: "market_data"`
+2. `ingestMarketListings(brand, model)` — calls connector, upserts rows in batches of 20, returns `{ inserted, updated, skipped }`
+3. `ingestListingsAction` — auth-gated server action; blocks demo mode
+
+**One-off validation script:**
+```bash
+npx tsx --env-file .env.local scripts/ingest-golf.ts
+```
+Fetches VW Golf, upserts to Supabase, verifies rows, prints result counts.
+
+**Key rules:**
+- Market data rows have `listing_type = 'market_data'`, manually-analyzed deals have `listing_type = 'deal'`
+- Comparables queries filter strictly on `listing_type = 'market_data'`
+- Market data rows never appear in the Deals list (no `deal_statuses` entry)
+- Deduplication via `UNIQUE(source, external_id)` + upsert `onConflict: "external_id,source"`
 
 ## Mock vs Supabase data
 
@@ -88,10 +115,9 @@ Mock data includes 26 listings with valuations, comparables, and deal statuses.
 
 ## Constraints — what NOT to do
 
-- **No scraping, no ingestion, no external market APIs** — the engine works only with data already in the DB
 - **No monitoring service activation** — `monitoring-service.ts` and `scraper-pipeline.ts` are prepared stubs, not active
-- **No full-market real-time data** — comparable search is against existing inventory snapshots only
 - **No mock data in production flows** — if Supabase is configured but a query fails, return empty, not mock
+- **Do not include `listing_type = 'deal'` rows in comparable queries** — this creates circular valuation
 
 ## Development commands
 
@@ -99,6 +125,7 @@ Mock data includes 26 listings with valuations, comparables, and deal statuses.
 npm run dev      # start dev server on localhost:3000
 npm run build    # production build
 npm run seed     # seed Supabase with demo data (requires .env.local)
+npx tsx --env-file .env.local scripts/ingest-golf.ts  # validate AutoScout24 ingest pipeline
 ```
 
 ## Environment variables
@@ -114,10 +141,11 @@ SUPABASE_SERVICE_ROLE_KEY=
 Run `supabase/schema.sql` in the Supabase SQL Editor to initialize or re-sync the schema. Incremental migrations live in `supabase/migrations/`.
 
 Current migrations applied:
-- `20260329_dealer_preferences_price_range.sql` — min/max price columns
-- `20260331_valuations_source.sql` — valuation_source column
-- `20260331_deal_status_history.sql` — audit trail table
+- `20260329_dealer_preferences_price_range.sql` — min/max price columns on dealer_preferences
+- `20260331_valuations_source.sql` — valuation_source column on valuations
+- `20260331_deal_status_history.sql` — audit trail table for status changes
 - `20260331_dealer_cost_overrides.sql` — cost override columns on dealer_preferences
+- `20260402_listings_market_data.sql` — listing_type column + index on listings
 
 ## Completed improvements (all shipped)
 
@@ -128,3 +156,5 @@ Current migrations applied:
 5. Pagination on deals page — 20 per page, URL-driven
 6. Audit trail for deal status changes — `deal_status_history` table + timeline on detail page
 7. Configurable cost overrides per dealer — recon, holding, risk buffer in Settings
+8. Phase 2: AutoScout24 NL market data ingestion — `listing_type` column, connector, ingest service, server action
+9. Fix: comparable selection now filters `listing_type = 'market_data'` only — manual deals excluded from comparable pool

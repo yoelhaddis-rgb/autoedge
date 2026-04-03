@@ -11,7 +11,7 @@ type DealStatusActionsProps = {
   status: DealLifecycleStatus;
 };
 
-const actions = [
+const primaryActions = [
   { label: "Saved", value: "saved" },
   { label: "Ignored", value: "ignored" },
   { label: "Contacted", value: "contacted" },
@@ -30,7 +30,7 @@ export function DealStatusActions({ listingId, note, status }: DealStatusActions
         <input type="hidden" name="listingId" value={listingId} />
         <Textarea name="note" defaultValue={note} rows={4} placeholder="Internal note for your team" />
         <div className="grid gap-2 sm:grid-cols-2">
-          {actions.map((action) => (
+          {primaryActions.map((action) => (
             <Button
               key={action.value}
               type="submit"
@@ -43,6 +43,18 @@ export function DealStatusActions({ listingId, note, status }: DealStatusActions
             </Button>
           ))}
         </div>
+        {status !== "new" && (
+          <Button
+            type="submit"
+            name="status"
+            value="new"
+            variant="ghost"
+            fullWidth
+            className="text-xs text-foreground/45 hover:text-foreground/70"
+          >
+            Reset to New
+          </Button>
+        )}
         <p className="text-xs text-foreground/55">Click an action to save both status and note.</p>
       </form>
     </div>

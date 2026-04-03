@@ -128,6 +128,7 @@ async function fetchComparableListings(target: Listing): Promise<Listing[]> {
     .lte("mileage", target.mileage + strictMileageWindow)
     .gte("asking_price", Math.max(1000, Math.round(target.askingPrice * 0.55)))
     .lte("asking_price", Math.round(target.askingPrice * 1.45))
+    .eq("listing_type", "market_data")
     .limit(30);
 
   const { data: strictRows, error: strictError } = await strictQuery;
@@ -150,6 +151,7 @@ async function fetchComparableListings(target: Listing): Promise<Listing[]> {
     .lte("mileage", target.mileage + 85000)
     .gte("asking_price", Math.max(1000, Math.round(target.askingPrice * 0.5)))
     .lte("asking_price", Math.round(target.askingPrice * 1.55))
+    .eq("listing_type", "market_data")
     .limit(50);
 
   const { data: relaxedRows, error: relaxedError } = await relaxedQuery;
@@ -257,7 +259,8 @@ export async function analyzeVehicle(
       seller_type: "Unknown",
       description: input.notes || "Manual valuation submission",
       image_urls: input.imageUrl ? [input.imageUrl] : [],
-      first_seen_at: new Date().toISOString()
+      first_seen_at: new Date().toISOString(),
+      listing_type: "deal"
     },
     {
       onConflict: "id"

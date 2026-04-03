@@ -127,8 +127,8 @@ function estimateProjectedDaysToSell(input: {
 
   let projectedDays = 24;
 
-  if (comparableCount < 4) projectedDays += 8;
-  if (comparableCount < 2) projectedDays += 7;
+  if (comparableCount < 4) projectedDays += 6;
+  if (comparableCount < 2) projectedDays += 6;
   if (strictMatchCount <= 1) projectedDays += 5;
 
   if (listing.mileage >= 170000) projectedDays += 6;
@@ -176,8 +176,8 @@ function estimateRiskBuffer(input: {
 
   let riskBuffer = overrides?.riskBufferBase ?? 220;
 
-  if (comparableCount < 4) riskBuffer += (4 - comparableCount) * 150;
-  if (strictMatchCount < 2) riskBuffer += (2 - strictMatchCount) * 110;
+  if (comparableCount < 4) riskBuffer += (4 - comparableCount) * 100;
+  if (strictMatchCount < 2) riskBuffer += (2 - strictMatchCount) * 75;
   if (spreadRatio > 0.15) riskBuffer += Math.round((spreadRatio - 0.15) * 3800);
   if (listing.mileage >= 170000) riskBuffer += 260;
   else if (listing.mileage >= 140000) riskBuffer += 140;
@@ -209,7 +209,7 @@ function normalizeCostBucketsToTarget(rawBuckets: CostBuckets, targetExpectedCos
   return { reconCosts, holdingCost, riskBuffer };
 }
 
-function buildConfidenceScore(input: {
+export function buildConfidenceScore(input: {
   comparableCount: number;
   strictMatchCount: number;
   spreadRatio: number;
@@ -223,7 +223,7 @@ function buildConfidenceScore(input: {
   return clamp(countScore + strictScore + spreadScore + turnoverScore, 20, 96);
 }
 
-function buildDealScore(breakdown: ValuationCostBreakdown, confidenceScore: number): number {
+export function buildDealScore(breakdown: ValuationCostBreakdown, confidenceScore: number): number {
   const profitRatio = breakdown.expectedProfit / Math.max(1, breakdown.acquisitionPrice);
   const marginScore = clamp(Math.round(50 + profitRatio * 150), 0, 100);
 
@@ -237,7 +237,7 @@ function buildDealScore(breakdown: ValuationCostBreakdown, confidenceScore: numb
           : 0;
 
   const riskAdjustment = breakdown.riskBuffer >= 1200 ? -8 : breakdown.riskBuffer <= 380 ? 3 : 0;
-  const negativeMarginPenalty = breakdown.expectedProfit < 0 ? -16 : 0;
+  const negativeMarginPenalty = breakdown.expectedProfit < -500 ? -16 : breakdown.expectedProfit < 0 ? -6 : 0;
 
   return clamp(
     Math.round(marginScore * 0.65 + confidenceScore * 0.35 + turnoverAdjustment + riskAdjustment + negativeMarginPenalty),
@@ -265,7 +265,7 @@ function buildReasons(input: {
     reasons.push("asking price sits below the comparable median resale estimate");
   }
 
-  if (valuationSource === "comparable_based" && breakdown.spreadRatio <= 0.1) {
+  if (valuationSource === "comparable_based" && breakdown.comparableCount >= 2 && breakdown.spreadRatio <= 0.1) {
     reasons.push("tight comparable spread supports stronger resale confidence");
   }
 

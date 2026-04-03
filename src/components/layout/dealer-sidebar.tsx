@@ -49,8 +49,11 @@ export function DealerSidebar() {
           <div className="rounded-xl border border-accent/10 bg-accent/[0.03] p-4">
             <p className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-accent/70">Edge Feed</p>
             <p className="text-xs leading-relaxed text-foreground/40">
-              Listings are scored on analysis. Connect source connectors to activate live feed.
+              Score a listing against comparable inventory to build your opportunity feed.
             </p>
+            <Link href="/deals/analyze" className="mt-2 inline-flex text-xs text-accent/60 transition-colors hover:text-accent">
+              Analyze vehicle →
+            </Link>
           </div>
         </div>
       </div>

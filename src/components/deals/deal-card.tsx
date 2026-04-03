@@ -90,7 +90,7 @@ export function DealCard({ deal }: DealCardProps) {
             {getConfidenceLabel(deal.valuation.confidenceScore)} · {deal.valuation.confidenceScore}/100
           </Badge>
           {deal.valuation.valuationSource === "model_based" && (
-            <Badge className="border-amber-500/30 bg-amber-500/8 text-amber-400/80">Heuristisch</Badge>
+            <Badge className="border-amber-500/30 bg-amber-500/8 text-amber-400/80">Heuristic</Badge>
           )}
         </div>
 
