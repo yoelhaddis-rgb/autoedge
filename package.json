@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "predev": "rm -rf .next",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -15,9 +16,10 @@
     "@supabase/supabase-js": "^2.49.8",
     "clsx": "^2.1.1",
     "lucide-react": "^0.511.0",
-    "next": "15.3.2",
+    "next": "^15.3.9",
     "react": "19.0.0",
-    "react-dom": "19.0.0"
+    "react-dom": "19.0.0",
+    "resend": "^6.10.0"
   },
   "devDependencies": {
     "@types/node": "^22.15.11",

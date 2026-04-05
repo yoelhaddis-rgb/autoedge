@@ -5,10 +5,17 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { getCurrentDealerContext } from "@/lib/services/auth";
 import { getDealerPreferences } from "@/lib/services/preferences";
+import { getMarketDataCounts } from "@/lib/services/market-ingest";
+import { MarketDataPanel } from "@/components/settings/market-data-panel";
 
 export default async function SettingsPage() {
   const context = await getCurrentDealerContext();
   const preferences = await getDealerPreferences(context.dealerId);
+
+  const pairs: [string, string][] = preferences.preferredBrands.flatMap((brand) =>
+    preferences.preferredModels.map((model): [string, string] => [brand, model])
+  );
+  const marketDataCounts = await getMarketDataCounts(pairs);
 
   return (
     <div className="space-y-6">
@@ -129,7 +136,7 @@ export default async function SettingsPage() {
               id="selectedSourceGroups"
               name="selectedSourceGroups"
               defaultValue={preferences.selectedSourceGroups.join(", ")}
-              placeholder="DealerStock NL, PremiumLease Exchange, RegionalAutoHub"
+              placeholder="AutoScout24, Marktplaats NL"
             />
           </div>
 
@@ -189,6 +196,15 @@ export default async function SettingsPage() {
             <Button type="submit">Save preferences</Button>
           </div>
         </form>
+      </Card>
+      <Card>
+        <div className="mb-4">
+          <p className="font-heading text-base font-semibold text-foreground">Market data</p>
+          <p className="text-sm text-foreground/45">
+            Comparable listings per brand/model pair · refresh to pull fresh data from AutoScout24
+          </p>
+        </div>
+        <MarketDataPanel counts={marketDataCounts} />
       </Card>
     </div>
   );

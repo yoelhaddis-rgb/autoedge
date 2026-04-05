@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { BarChart3, Bookmark, LayoutDashboard, Settings2 } from "lucide-react";
+import { BarChart3, Bookmark, LayoutDashboard, ScanLine, Settings2 } from "lucide-react";
 
 export type NavItem = {
   label: string;
@@ -17,6 +17,11 @@ export const dealerNavItems: NavItem[] = [
     label: "Deals",
     href: "/deals",
     icon: BarChart3
+  },
+  {
+    label: "Scans",
+    href: "/scans",
+    icon: ScanLine
   },
   {
     label: "Saved",

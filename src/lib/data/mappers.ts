@@ -102,6 +102,8 @@ export function mapPreferenceRow(row: PreferenceRow): DealerPreference {
     reconCostBaseOverride: row.recon_cost_base_override,
     dailyHoldingCostOverride: row.daily_holding_cost_override,
     riskBufferBaseOverride: row.risk_buffer_base_override,
+    lastScanAt: row.last_scan_at ?? null,
+    lastScanAnalyzed: row.last_scan_analyzed ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };

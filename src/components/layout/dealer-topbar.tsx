@@ -3,6 +3,7 @@ import { LogOut, User2 } from "lucide-react";
 import { signOutAction } from "@/actions/auth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { dealerNavItems } from "@/lib/constants/nav";
 
 type DealerTopbarProps = {
   email: string;
@@ -22,16 +23,21 @@ export function DealerTopbar({ email, isDemo }: DealerTopbarProps) {
               DEMO MODE
             </Badge>
           )}
+          {/* Mobile nav — visible below lg where sidebar is hidden */}
+          <nav className="flex items-center gap-1 lg:hidden">
+            {dealerNavItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-foreground/50 transition hover:bg-white/[0.06] hover:text-foreground/90"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
         </div>
 
         <div className="flex items-center gap-2">
-          <Link
-            href="/deals"
-            className="hidden text-xs font-medium uppercase tracking-[0.12em] text-foreground/40 transition hover:text-accent sm:block"
-          >
-            Live Opportunities
-          </Link>
-
           <div className="hidden items-center gap-2 rounded-xl border border-border/50 bg-white/[0.03] px-3 py-1.5 md:flex">
             <User2 className="h-3.5 w-3.5 text-foreground/30" />
             <span className="text-xs text-foreground/55">{email}</span>

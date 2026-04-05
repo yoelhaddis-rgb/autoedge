@@ -4,6 +4,8 @@ import { mapPreferenceRow } from "@/lib/data/mappers";
 import { asUpsertTable } from "@/lib/supabase/untyped";
 import { ensureDealerProfileExists } from "@/lib/services/dealer-profile";
 import type { DealerPreference } from "@/types/domain";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/database";
 
 function buildDefaultPreferences(dealerId: string): DealerPreference {
   const now = new Date().toISOString();
@@ -17,24 +19,26 @@ function buildDefaultPreferences(dealerId: string): DealerPreference {
 }
 
 export async function getDealerPreferences(
-  dealerId: string = DEMO_DEALER_ID
+  dealerId: string = DEMO_DEALER_ID,
+  supabaseOverride?: SupabaseClient<Database>
 ): Promise<DealerPreference> {
-  const supabase = await createServerClient();
+  const supabase = supabaseOverride ?? await createServerClient();
   if (!supabase) return mockDealerPreferences;
 
   const { data, error } = await supabase
     .from("dealer_preferences")
     .select("*")
     .eq("dealer_id", dealerId)
-    .single();
+    .maybeSingle();
 
-  if (error || !data) {
-    if (error) {
-      console.error("AutoEdge: failed to load dealer preferences", {
-        dealerId,
-        error: error.message
-      });
-    }
+  if (error) {
+    console.error("AutoEdge: failed to load dealer preferences", {
+      dealerId,
+      error: error.message
+    });
+  }
+
+  if (!data) {
     return buildDefaultPreferences(dealerId);
   }
   return mapPreferenceRow(data);

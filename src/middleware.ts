@@ -4,7 +4,7 @@ import { createServerClient } from "@supabase/ssr";
 import { getSupabaseEnv, isSupabaseConfigured } from "@/lib/supabase/env";
 import type { Database } from "@/types/database";
 
-const protectedPrefixes = ["/dashboard", "/deals", "/saved", "/settings"];
+const protectedPrefixes = ["/dashboard", "/deals", "/saved", "/settings", "/scans"];
 type SupabaseCookie = {
   name: string;
   value: string;

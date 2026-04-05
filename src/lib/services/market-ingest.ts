@@ -10,6 +10,37 @@ export type IngestResult = {
   skipped: number;
 };
 
+export type MarketDataCount = {
+  brand: string;
+  model: string;
+  count: number;
+};
+
+export async function getMarketDataCounts(pairs: [string, string][]): Promise<MarketDataCount[]> {
+  if (pairs.length === 0) return [];
+  const supabase = await createServerClient();
+  if (!supabase) return pairs.map(([brand, model]) => ({ brand, model, count: 0 }));
+
+  const { data, error } = await supabase
+    .from("listings")
+    .select("brand, model")
+    .eq("listing_type", "market_data");
+
+  if (error || !data) return pairs.map(([brand, model]) => ({ brand, model, count: 0 }));
+
+  const countMap = new Map<string, number>();
+  for (const row of data) {
+    const key = `${row.brand}||${row.model}`;
+    countMap.set(key, (countMap.get(key) ?? 0) + 1);
+  }
+
+  return pairs.map(([brand, model]) => ({
+    brand,
+    model,
+    count: countMap.get(`${brand}||${model}`) ?? 0
+  }));
+}
+
 const BATCH_SIZE = 20;
 
 function toRow(listing: Listing) {

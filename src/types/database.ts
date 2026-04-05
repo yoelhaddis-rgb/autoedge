@@ -53,6 +53,8 @@ export interface Database {
           recon_cost_base_override: number | null;
           daily_holding_cost_override: number | null;
           risk_buffer_base_override: number | null;
+          last_scan_at: string | null;
+          last_scan_analyzed: number | null;
           created_at: string;
           updated_at: string;
         };

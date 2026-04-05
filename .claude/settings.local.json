@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(npx tsc:*)",
+      "Bash(ls -la /Users/yh/Desktop/autoedge/src/app/\\\\\\(dealer\\\\\\)/deals/)",
+      "Bash(curl -s http://localhost:3001/)",
+      "Bash(/dev/null echo:*)",
+      "Bash(curl -v http://localhost:3003/deals/analyze)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npm run:*)",
+      "Bash(git add:*)",
+      "Bash(curl -s http://localhost:3000/dashboard)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
+      "Bash(grep -r listing_type /Users/yh/Desktop/autoedge/src --include=*.ts --include=*.tsx)",
+      "Bash(grep -r count: /Users/yh/Desktop/autoedge/src --include=*.ts --include=*.tsx)",
+      "Bash(grep -r ingestListingsAction /Users/yh/Desktop/autoedge/src --include=*.ts --include=*.tsx)",
+      "Bash(grep -r 'form action' /Users/yh/Desktop/autoedge/src/app --include=*.tsx)",
+      "Bash(grep -r .select.*count /Users/yh/Desktop/autoedge/src --include=*.ts --include=*.tsx)",
+      "Bash(curl -s http://localhost:3000/)",
+      "Bash(xargs kill:*)",
+      "Bash(curl -s -A \"Mozilla/5.0 \\(Macintosh; Intel Mac OS X 10_15_7\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0.0.0 Safari/537.36\" \"https://www.marktplaats.nl/c/auto-s/volkswagen/golf/\")",
+      "Bash(curl -s -A \"Mozilla/5.0 \\(Macintosh; Intel Mac OS X 10_15_7\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0.0.0 Safari/537.36\" \"https://www.marktplaats.nl/c/auto-s/volkswagen/golf/\" -o /tmp/mp_test.html)",
+      "Bash(echo \"Status: $?\")",
+      "Read(//tmp/**)",
+      "Bash(python3 -c \":*)"
+    ]
+  }
+}

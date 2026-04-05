@@ -1,5 +1,6 @@
 import type { Listing } from "@/types/domain";
 import { AutoScout24Connector } from "@/lib/services/connectors/autoscout24-connector";
+import { MarktplaatsConnector } from "@/lib/services/connectors/marktplaats-connector";
 
 export type DealerInventoryQuery = {
   preferredBrands: string[];
@@ -42,5 +43,6 @@ export class SourceConnectorRegistry {
 }
 
 export const sourceConnectorRegistry = new SourceConnectorRegistry([
-  new AutoScout24Connector()
+  new AutoScout24Connector(),
+  new MarktplaatsConnector()
 ]);

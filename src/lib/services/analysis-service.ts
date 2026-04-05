@@ -11,6 +11,8 @@ import {
 import { getDealerPreferences } from "@/lib/services/preferences";
 import { ensureDealerProfileExists } from "@/lib/services/dealer-profile";
 import type { FuelType, Listing, TransmissionType, Valuation } from "@/types/domain";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/database";
 
 export type AnalyzeVehicleInput = {
   brand: string;
@@ -106,9 +108,7 @@ function getSimilarityScore(target: Listing, candidate: Listing): number {
   return yearDistance + mileageDistance + priceDistance + fuelPenalty + transmissionPenalty + locationPenalty;
 }
 
-async function fetchComparableListings(target: Listing): Promise<Listing[]> {
-  const supabase = await createServerClient();
-  if (!supabase) return [];
+async function fetchComparableListings(target: Listing, supabase: SupabaseClient<Database>): Promise<Listing[]> {
 
   // Nationwide default: keep selection broad and avoid city-level hard filtering.
   const strictYearWindow = 2;
@@ -164,11 +164,8 @@ async function fetchComparableListings(target: Listing): Promise<Listing[]> {
   return [...uniqueMap.values()];
 }
 
-async function fetchValuationMap(listingIds: string[]): Promise<Map<string, Valuation>> {
+async function fetchValuationMap(listingIds: string[], supabase: SupabaseClient<Database>): Promise<Map<string, Valuation>> {
   if (listingIds.length === 0) return new Map();
-
-  const supabase = await createServerClient();
-  if (!supabase) return new Map();
 
   const { data, error } = await supabase.from("valuations").select("*").in("listing_id", listingIds);
   if (error || !data) return new Map();
@@ -179,9 +176,9 @@ async function fetchValuationMap(listingIds: string[]): Promise<Map<string, Valu
   }));
 }
 
-async function buildComparableInputs(target: Listing): Promise<ComparableInput[]> {
-  const comparables = await fetchComparableListings(target);
-  const valuationMap = await fetchValuationMap(comparables.map((listing) => listing.id));
+async function buildComparableInputs(target: Listing, supabase: SupabaseClient<Database>): Promise<ComparableInput[]> {
+  const comparables = await fetchComparableListings(target, supabase);
+  const valuationMap = await fetchValuationMap(comparables.map((listing) => listing.id), supabase);
 
   return comparables.map((listing) => {
     const strictMatch = listing.fuel === target.fuel && listing.transmission === target.transmission;
@@ -196,7 +193,8 @@ async function buildComparableInputs(target: Listing): Promise<ComparableInput[]
 
 export async function analyzeVehicle(
   dealerId: string,
-  rawInput: AnalyzeVehicleInput
+  rawInput: AnalyzeVehicleInput,
+  supabaseOverride?: SupabaseClient<Database>
 ): Promise<AnalyzeVehicleResult> {
   if (!isSupabaseConfigured()) {
     throw new Error(
@@ -204,12 +202,12 @@ export async function analyzeVehicle(
     );
   }
 
-  const supabase = await createServerClient();
+  const supabase = supabaseOverride ?? await createServerClient();
   if (!supabase) {
     throw new Error("Supabase client is unavailable.");
   }
 
-  const preferences = await getDealerPreferences(dealerId);
+  const preferences = await getDealerPreferences(dealerId, supabase);
   const costOverrides: DealerCostOverrides = {
     reconCostBase: preferences.reconCostBaseOverride ?? undefined,
     dailyHoldingCost: preferences.dailyHoldingCostOverride ?? undefined,
@@ -284,7 +282,7 @@ export async function analyzeVehicle(
 
   // Future hook: source connectors / selective monitoring can push candidate listings
   // through this same analysis pipeline instead of direct manual form input.
-  const comparableInputs = await buildComparableInputs(listing);
+  const comparableInputs = await buildComparableInputs(listing, supabase);
   const valuationEngine = new ComparableInventoryValuationEngine();
   const computed = await valuationEngine.estimate(listing, comparableInputs, costOverrides);
 

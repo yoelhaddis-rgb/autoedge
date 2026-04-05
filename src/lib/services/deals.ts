@@ -20,6 +20,7 @@ import { ensureDealerProfileExists } from "@/lib/services/dealer-profile";
 import type {
   Comparable,
   DealDetail,
+  DealerPreference,
   DealLifecycleStatus,
   DealOverview,
   DealStatus,
@@ -32,6 +33,8 @@ import type {
 // This service intentionally works with inventory snapshots (mock or Supabase)
 // and avoids assumptions about full-market real-time scraping.
 export type DealSort = "score_desc" | "profit_desc" | "fresh" | "price_asc" | "price_desc";
+
+export const SCAN_NOTE_MARKER = "Auto-discovered via monitoring scan.";
 
 export type DealFilters = {
   search?: string;
@@ -48,6 +51,8 @@ export type DealFilters = {
   minYear?: number;
   maxMileage?: number;
   brands?: string[];
+  // When true, only return deals created by the monitoring scan.
+  scanOnly?: boolean;
 };
 
 export type DashboardSummary = {
@@ -208,6 +213,10 @@ function applyFilters(deals: DealOverview[], filters: DealFilters = {}): DealOve
     result = result.filter((deal) => brandSet.has(deal.listing.brand.toLowerCase()));
   }
 
+  if (filters.scanOnly) {
+    result = result.filter((deal) => deal.note.startsWith(SCAN_NOTE_MARKER));
+  }
+
   switch (filters.sort) {
     case "profit_desc":
       result.sort((a, b) => b.valuation.expectedProfit - a.valuation.expectedProfit);
@@ -344,6 +353,30 @@ export async function getDealStatusHistory(
     note: row.note,
     changedAt: row.changed_at
   }));
+}
+
+export type ScanSummary = {
+  lastScanAt: string | null;
+  lastScanAnalyzed: number | null;
+  profitableCount: number;
+  topProfit: number | null;
+};
+
+export async function getScanSummary(
+  dealerId: string,
+  preferences: DealerPreference
+): Promise<ScanSummary> {
+  const scanDeals = await getDeals(dealerId, { scanOnly: true });
+  const profitable = scanDeals.filter((d) => d.valuation.expectedProfit > 0);
+  const topProfit =
+    profitable.length > 0 ? Math.max(...profitable.map((d) => d.valuation.expectedProfit)) : null;
+
+  return {
+    lastScanAt: preferences.lastScanAt ?? null,
+    lastScanAnalyzed: preferences.lastScanAnalyzed ?? null,
+    profitableCount: profitable.length,
+    topProfit
+  };
 }
 
 export async function upsertDealStatus(payload: {

@@ -886,10 +886,12 @@ export const mockDealerPreferences: DealerPreference = {
   fuelTypes: ["Petrol", "Diesel", "Hybrid"],
   transmissions: ["Automatic", "Manual"],
   monitoringIntensity: "balanced",
-  selectedSourceGroups: ["DealerStock NL", "PremiumLease Exchange", "RegionalAutoHub"],
+  selectedSourceGroups: ["AutoScout24"],
   reconCostBaseOverride: null,
   dailyHoldingCostOverride: null,
   riskBufferBaseOverride: null,
+  lastScanAt: null,
+  lastScanAnalyzed: null,
   createdAt: hoursAgo(200),
   updatedAt: hoursAgo(4)
 };

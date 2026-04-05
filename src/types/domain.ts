@@ -32,6 +32,8 @@ export interface DealerPreference {
   dailyHoldingCostOverride: number | null;
   /** Nullable — null means "use engine default (€220)". */
   riskBufferBaseOverride: number | null;
+  lastScanAt: string | null;
+  lastScanAnalyzed: number | null;
   createdAt: string;
   updatedAt: string;
 }
